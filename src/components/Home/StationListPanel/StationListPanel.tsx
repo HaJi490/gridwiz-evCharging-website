@@ -11,7 +11,6 @@ import style from './StationListPanel.module.css';
 import { FiFilter } from "react-icons/fi";
 import { TfiFilter } from "react-icons/tfi";
 import { HiOutlineAdjustmentsHorizontal } from "react-icons/hi2";
-import { TfiSearch } from "react-icons/tfi";
 import { FiSearch } from "react-icons/fi"; // 더짧고 굵음
 
 interface Filters {
@@ -100,8 +99,8 @@ export default function StationListPanel({
       {/* 모달 컨텐츠 */}
       <header className=' '>
         {/* 검색 */}
-        <div className='pb-4 border-b border-[#f2f2f2]'>
-          <div className={style.searchInput}>
+        <div className='pb-4 border-b border-[#f2f2f2] flex gap-3 items-center '>
+          <div className={`${style.searchInput} flex-1`}>
             <input
               type='text'
               ref={searchRef}

@@ -65,6 +65,17 @@
   animation: fadeInUp 0.5s ease-out forwards;
   opacity: 0;
   /* 애니메이션 시작 전에는 투명 */
+  /* 영역밖의 자식요소 자르기 */
+  overflow: hidden; 
+}
+
+.nocard{
+  color: var(--text-color-primary);
+  /* 👇 애니메이션을 위한 핵심 속성 */
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  /* 👇 등장 애니메이션 적용 */
+  animation: fadeInUp 0.5s ease-out forwards;
+  opacity: 0;
 }
 
 .cardmap {
@@ -74,8 +85,7 @@
   animation: fadeInUp 0.5s ease-out forwards;
   /* 애니메이션 시작 전에는 투명 */
   opacity: 0;
-  /* 영역밖의 자식요소 자르기 */
-  overflow: hidden; 
+  
 }
 
 .card:hover {
@@ -86,6 +96,13 @@
 
 .card h2 {
   margin-top: 0;
+  /* margin-bottom: 20px; */
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.nocard h2{
+  margin-bottom: 15px;
   /* margin-bottom: 20px; */
   font-size: 1.1rem;
   font-weight: 600;

@@ -11,47 +11,17 @@ import {
     ResponsiveContainer
 } from 'recharts';
 
+import { WeekdayDemand } from '@/types/dto';
 import style from './ChargingDemandLineChart.module.css'
 
   // 1. 한달 수요 예측 데이터
   const forecastData = [
-  // { date: '2025-07-21', demand: 120 },
-  // { date: '2025-07-22', demand: 135 },
-  // { date: '2025-07-23', demand: 110 },
-  // { date: '2025-07-24', demand: 98 },
-  // { date: '2025-07-25', demand: 115 },
-  // { date: '2025-07-26', demand: 140 },
-  // { date: '2025-07-27', demand: 162 },
-  // { date: '2025-07-28', demand: 180 },
-  // { date: '2025-07-29', demand: 167 },
-  // { date: '2025-07-30', demand: 148 },
-  // { date: '2025-07-31', demand: 145 },
-  // { date: '2025-08-01', demand: 140 },
-  // { date: '2025-08-02', demand: 134 },
-  // { date: '2025-08-03', demand: 122 },
-  // { date: '2025-08-04', demand: 108 },
-  // { date: '2025-08-05', demand: 122 },
-  // { date: '2025-08-06', demand: 107 },
-  // { date: '2025-08-07', demand: 124 },
-  // { date: '2025-08-08', demand: 131 },
-  // { date: '2025-08-09', demand: 113 },
-  // { date: '2025-08-10', demand: 94 },
-  // { date: '2025-08-11', demand: 90 },
-  // { date: '2025-08-12', demand: 90 },
-  // { date: '2025-08-13', demand: 90 },
-  // { date: '2025-08-14', demand: 102 },
-  // { date: '2025-08-15', demand: 120 },
-  // { date: '2025-08-16', demand: 101 },
-  // { date: '2025-08-17', demand: 116 },
-  // { date: '2025-08-18', demand: 108 },
-  // { date: '2025-08-19', demand: 122 },
-  // { date: '2025-08-20', demand: 128 }
-  { chgerId: 'CSCS2015', week: 'Monday', demand: 19.776451612903223 },
-  { chgerId: 'CSCS2015', week: 'Tuesday', demand: 27.214499999999994 },
-  { chgerId: 'CSCS2015', week: 'Wednesday', demand: 22.267000000000003 },
-  { chgerId: 'CSCS2015', week: 'Thursday', demand: 21.98606060606061 },
-  { chgerId: 'CSCS2015', week: 'Friday', demand: 23.62666666666667 },
-  { chgerId: 'CSCS2015', week: 'Saturday', demand: 22.694242424242432 }
+  { stationLocation: 'CSCS2015', dayOfWeek: 'Monday', kwhRequest: 19.776451612903223 },
+  { stationLocation: 'CSCS2015', dayOfWeek: 'Tuesday', kwhRequest: 27.214499999999994 },
+  { stationLocation: 'CSCS2015', dayOfWeek: 'Wednesday', kwhRequest: 22.267000000000003 },
+  { stationLocation: 'CSCS2015', dayOfWeek: 'Thursday', kwhRequest: 21.98606060606061 },
+  { stationLocation: 'CSCS2015', dayOfWeek: 'Friday', kwhRequest: 23.62666666666667 },
+  { stationLocation: 'CSCS2015', dayOfWeek: 'Saturday', kwhRequest: 22.694242424242432 }
   ];
 
   const dayKor = {
@@ -81,7 +51,11 @@ import style from './ChargingDemandLineChart.module.css'
     return null;
   };
 
-export default function ChargingDemandLineChart() {
+  interface ChargingDemandLineChartProps {
+    statData: WeekdayDemand[]
+  }
+
+export default function ChargingDemandLineChart({statData}: ChargingDemandLineChartProps) {
 
   // 3. 차트 클릭 시 실행될 함수
   const handleChartClick = (chartState: any) => {
@@ -105,22 +79,22 @@ export default function ChargingDemandLineChart() {
   };
 
   // 데이터 변환 + 정렬(요일)
-  const converted = forecastData.map( item => {
-    const kor = dayKor[item.week];
+  const converted = statData?.map( item => {
+    const kor = dayKor[item.dayOfWeek];
 
     return {
-      ...forecastData,
-      week: kor,
+      ...statData,
+      dayOfWeek: kor,
     }
-  }).sort((a, b) => korDayOrder.indexOf(a.week) - korDayOrder.indexOf(b.week));
+  }).sort((a, b) => korDayOrder.indexOf(a.dayOfWeek) - korDayOrder.indexOf(b.dayOfWeek));
 
-  console.log(converted);
+  console.log('데이터변환, 정렬: ', converted);
 
 
   return (
     <div className='w-full h-[350px]'>
       <ResponsiveContainer>
-        <AreaChart data={forecastData} onClick={handleChartClick} 
+        <AreaChart data={statData} onClick={handleChartClick} 
                   margin={{ top: 10, right: 30, left: 0, bottom: 20 }}>
 
           {/* 그라데이션 효과 정의 */}
@@ -132,7 +106,7 @@ export default function ChargingDemandLineChart() {
           </defs>
 
           {/* X축 (날짜). tickFormatter로 날짜 형식을 보기 좋게 변경 */}
-          <XAxis dataKey='week' //tickFormatter={(week)=>dayKor(week)}        // (dateStr) => new Date(dateStr).getDate() + '일'
+          <XAxis dataKey='dayOfWeek' //tickFormatter={(week)=>dayKor(week)}        // (dateStr) => new Date(dateStr).getDate() + '일'
                 tick={{fill: '#888888'}} fontSize={12} dy={10}/>
 
           {/* y축(수요량) */}
@@ -146,7 +120,7 @@ export default function ChargingDemandLineChart() {
 
           {/* 실제 그래프를 그리는 Area컴포넌트 */}
           <Area type='monotone'
-              dataKey='demand'
+              dataKey='kwhRequest'
               stroke='#4FA969'
               strokeWidth={3}
               fillOpacity={1}

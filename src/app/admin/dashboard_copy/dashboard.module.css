@@ -1,0 +1,77 @@
+/* --- 등장 애니메이션 Keyframes --- */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 등장 애니메이션 지연 효과 (순서대로 나타나도록) */
+.dashboard_header {
+  animation-delay: 0.2s;
+}
+
+.dashboard_grid {
+  animation-delay: 0.3s;
+}
+
+
+:root {
+  /* --bg-color: #f0f2f5;  */
+  --card-bg-color: #ffffff;
+  --text-color-primary: #1a202c;
+  --text-color-secondary: #718096;
+  --border-radius: 16px;
+  --gap: 24px;
+  /*  👈 바로 이 부분입니다! */
+  --shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+}
+
+.dashboard_grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  /* 12 컬럼 그리드 시스템 */
+  gap: var(--gap);
+}
+
+.card {
+  background-color: var(--card-bg-color);
+  border-radius: var(--border-radius);
+  /* padding: var(--gap); */
+  box-shadow: var(--shadow);
+  /* color: var(--text-color-primary); */
+  /* 👇 애니메이션을 위한 핵심 속성 */
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  /* 👇 등장 애니메이션 적용 */
+  animation: fadeInUp 0.5s ease-out forwards;
+  opacity: 0;
+  /* 애니메이션 시작 전에는 투명 */
+  /* 영역밖의 자식요소 자르기 */
+  overflow: hidden; 
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  /* 호버 시 살짝 위로 이동 */
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+}
+
+.card h2{
+  font-size: large;
+  font-weight: 600;
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+
+/* --- 태블릿 반응형 (1024px 이하) --- */
+@media (max-width: 1024px) {
+  .dashboard_grid {
+    grid-template-columns: repeat(6, 1fr);
+    /* 6 컬럼으로 변경 */
+  }
+}

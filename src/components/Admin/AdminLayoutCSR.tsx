@@ -17,7 +17,7 @@ export default function AdminLayoutCSR({ children }: { children: ReactNode }) {
                 <Sidebar expanded={expanded} setExpanded={setExpanded} />
             </div>
             <main
-                className={`flex-1 h-full overflow-y-auto p-2 transition-all duration-300 ${expanded ? 'ml-72' : 'ml-20'
+                className={`flex-1 h-full overflow-y-auto transition-all duration-300 ${expanded ? 'ml-72' : 'ml-20'
                     }`}
             >
                 {children}

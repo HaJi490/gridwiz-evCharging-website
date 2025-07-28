@@ -137,6 +137,20 @@ export interface ActualChargingStationData {
     chargerInfo: Record<string, any> | null; 
 }
 
+// 충전소별 시게열응답
+export type WeekdayDemand = {
+    stationLocation: string;
+    dayOfWeek: 
+    | "Monday"
+    | "Tuesday"
+    | "Wednesday"
+    | "Thursday"
+    | "Friday"
+    | "Saturday"
+    | "Sunday";
+    kwhRequest: number;
+};
+
 // 📍회원가입 reqest
 export interface SignupRequest {
     username: string;

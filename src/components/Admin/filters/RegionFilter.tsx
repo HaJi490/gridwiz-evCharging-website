@@ -4,9 +4,8 @@ import React,{useState} from 'react'
 import style from './RegionFilter.module.css'
 
 export const busanDistricts = [
-    { name: '부산시 전체', longitude: 129.0756, latitude: 35.1796, zoom: 10 },
-    { name: '강서구', longitude: 128.9816, latitude: 35.2132, zoom: 11 },
     { name: '금정구', longitude: 129.0921, latitude: 35.2431, zoom: 12 },
+    { name: '강서구', longitude: 128.9816, latitude: 35.2132, zoom: 11 },
     { name: '기장군', longitude: 129.2136, latitude: 35.2445, zoom: 11 },
     { name: '남구', longitude: 129.0833, latitude: 35.1365, zoom: 12.5 },
     { name: '동구', longitude: 129.0416, latitude: 35.1296, zoom: 13 },

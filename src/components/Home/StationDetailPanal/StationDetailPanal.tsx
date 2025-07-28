@@ -371,7 +371,7 @@ export default function StationDetailPanal({
                                                             {charger.output}kW
                                                         </p> */}
                                                         <p className="text-xs text-gray-500">
-                                                            {getTimeAgo(charger.lastTsdt)}
+                                                            { getTimeAgo(charger.lastTsdt)}
                                                         </p>
                                                     </div>
                                                 )
