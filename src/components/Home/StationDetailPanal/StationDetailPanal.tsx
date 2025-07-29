@@ -50,13 +50,17 @@ export default function StationDetailPanal({
         submessage: '',
         onConfirm: () => {},
     });
+    const [isClosing, setIsClosing] = useState<boolean>(false);
     // 토스트메시지
     const [toastMsg, setToastMsg] = useState<string>('');
 
 
-    // 1. 위부 클릭시 패널닫기
+    // 1. 위부 클릭시 패널닫기 (모달 떠있을때는 처리하지 않음)
     useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
+            // 모달이 떠있으면 패널 닫기 이벤트 무시
+            if (modalInfo.show) return;
+            
             // 클릭된 요소가 HTML노드인지 확인
             const targetNode = e.target as Node;
 
@@ -78,7 +82,16 @@ export default function StationDetailPanal({
         document.addEventListener('click', handleClickOutside)
         return () => document.removeEventListener('click', handleClickOutside)
 
-    }, [onClose, showReserv, closeDetailRef, selectedStation]); //closeDetailRef
+    }, [onClose, showReserv, closeDetailRef, selectedStation, modalInfo.show]); //closeDetailRef
+
+    // 패널 닫기 애니메이션 처리
+    const handleClose = () => {
+        setIsClosing(true);
+        setTimeout(() => {
+            onClose();
+            setIsClosing(false);
+        }, 300); // 애니메이션 duration과 맞춤
+    };
 
     // 2. 경과시간계산 - 타임스탬프 파싱
     const parseTimestamp = (respDt: string) => {
@@ -209,10 +222,12 @@ export default function StationDetailPanal({
 
     // 확인모달 닫기
     const onCancelConrirmModal = () => {
-        setModalInfo({ ...modalInfo,
+        setModalInfo({ 
                     message: '',
                     submessage: '',
-                    show: false });
+                    show: false,
+                    onConfirm: () => {}
+                });
     }
 
     // ToastMsg 콜백
@@ -238,11 +253,11 @@ export default function StationDetailPanal({
         <>
             <Toast message={toastMsg} setMessage={setToastMsg}/>
             {modalInfo.show &&
-                <ConfirmModal message={modalInfo.message} submsg={modalInfo.submessage} onConfirm={() => modalInfo.onConfirm()} onCancel={()=>onCancelConrirmModal} />
+                <ConfirmModal message={modalInfo.message} submsg={modalInfo.submessage} onConfirm={() => modalInfo.onConfirm()} onCancel={onCancelConrirmModal} />
             }
             <div
                 ref={panelRef}
-                className='absolute top-103 left-162 h-full -translate-x-1/2 -translate-y-1/2 bg-white  rounded-lg shadow-xl z-20 w-100 max-h-[85vh]'
+                className={`absolute top-103 left-162 h-full -translate-x-1/2 -translate-y-1/2 bg-white  rounded-lg shadow-xl z-20 w-100 max-h-[85vh] transition-all duration-300 ease-out`}
             >
                 {/* overflow-y-auto, relative */}
                 <div className='h-full flex flex-col relative'>

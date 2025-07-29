@@ -4,6 +4,7 @@ import React, {useState, useRef, useEffect} from 'react'
 
 // import FilterModal from '../Filter/FilterModal';
 import StationDetailPanal from '../StationDetailPanal/StationDetailPanal';
+import FilterModal from '@/components/Filter/FilterModal';
 import Toast from '@/components/Toast/Toast';
 import { StationListItem } from '@/types/dto';
 import nmToid from '../../../db/busi_id.json';
@@ -53,6 +54,7 @@ export default function StationListPanel({
   const closeDetailRef = useRef<HTMLButtonElement | null>(null);
   const searchRef = useRef<HTMLInputElement | null >(null);
   const [isSearchOpen, setIsSearchOpen] = useState<boolean>(false);
+
   const listRef = useRef<HTMLUListElement>(null); // 리스트 스크롤
 
   // 1. 검색
@@ -96,6 +98,7 @@ export default function StationListPanel({
 
   return (
     <>
+    <Toast message={toastMessage} setMessage={setToastMessage}/>
       {/* 모달 컨텐츠 */}
       <header className=' '>
         {/* 검색 */}
@@ -112,7 +115,16 @@ export default function StationListPanel({
               <FiSearch size={20} />
             </button>
           </div>
-          <button ref={closeDetailRef} className={`${style.searchBtn} h-8`}><FiFilter size={20}/></button>
+          <button ref={closeDetailRef} onClick={() => setIsFilterOpen(true)}
+                className={`${style.searchBtn} h-8`}>
+              <FiFilter size={20}/>
+          </button>
+          <FilterModal
+            isOpen={isFilterOpen} 
+            onClose={() => setIsFilterOpen(false)}
+            onApplyFilters={handleApplyFilters}
+            initialFilters={currentFilter} 
+          />
         </div>
       </header>
         {/* {isSearchOpen 
@@ -186,11 +198,13 @@ export default function StationListPanel({
           ))}
         </ul>
         {/* 상세정보 패널 */}
-        <StationDetailPanal 
-          selectedStation = {selectedStation}
-          onClose={handleCloseDetailPanel}
-          closeDeailRef = {closeDetailRef}
-        />
+        {selectedStation &&(
+          <StationDetailPanal 
+            selectedStation = {selectedStation}
+            onClose={handleCloseDetailPanel}
+            closeDeailRef = {closeDetailRef}
+          />
+        )}
     </>
       
   )

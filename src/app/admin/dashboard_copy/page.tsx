@@ -241,13 +241,18 @@ export default function page() {
             <div className={style.dashboard_grid}>
                 {/* 실시간 충전소 상태 */}
                 <div className={`${style.card} lg:col-span-3 md:col-span-6 p-10 flex flex-col justify-center h-[500px] `}>
-                    <h2>실시간 충전소 상태</h2>
-                    <div className='w-full flex h-2 rounded-full overflow-hidden mb-18'>
+                    <h2>{} 실시간 상태</h2>
+                    <div className='w-full flex h-2 rounded-full overflow-hidden mb-10'>
                         {statStatus.map(item => (
                             <div key={item.status} style={{ width: item.percentage, backgroundColor: item.color }} />
                         ))}
                     </div>
                     <ul className='space-y-5'>
+                        <li className='flex justify-between items-center border-b border-[#f2f2f2] last:border-b-0 pb-4 
+                                        font-semibold text-gray-600 text-sm text-right'>
+                            <span>{`All (1054 대)`}</span>
+                            
+                        </li>
                         {statStatus.map(item => (
                             <li key={item.status} className='flex justify-between items-center
                                                     border-b border-[#f2f2f2] last:border-b-0 pb-4'>

@@ -52,6 +52,20 @@ body {
   width: 3.75rem; /* w-15 (60px) */
 }
 
+/* nav뺀 화면 */
+.mainContainer{
+    /* width: 100%;
+    height: 100%; */
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    height: calc(100vh - 80px); 
+    position: relative;
+    margin-top: 80px;
+    /* nav 높이 빼기 */
+    overflow-y: auto;
+}
+
 
 /* 버튼 */
 /* 라운드 버튼 */
@@ -73,6 +87,7 @@ body {
     padding: 0.75rem 5rem 0.75rem 5rem;
     border-radius: 0.25rem;
     font-weight: bold;
+    cursor: pointer;
 }
 
 .cancel {

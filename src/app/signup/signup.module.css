@@ -1,0 +1,32 @@
+.inputbox {
+    padding-left: 1rem; 
+    padding-right: 1rem;
+    padding-top: 0.75rem; 
+    padding-bottom: 0.75rem;
+    width: 100%;
+    border-radius: 0.25rem;
+    border: 1px solid #afafaf
+    /* px-4 py-3 w-full max-w-[450px] rounded border border-[#afafaf] focus:ouline-none */
+}
+
+.inputbox:focus {
+    outline-color: #4FA969;
+}
+
+
+
+.btn {
+    padding: 0.75rem 5rem 0.75rem 5rem;
+    border-radius: 0.25rem;
+    font-weight: bold;
+}
+
+.cancel {
+    background-color: #f2f2f2;
+    color: #666666;
+}
+
+.confirm {
+    background-color: #4FA969;
+    color: white;
+}

@@ -40,8 +40,11 @@ export default function Nav() {
         setIsScrolled(false);
       }
     }
+
     // '/produceComp' 페이지일 때만 스크롤 이벤트 리스너를 추가
     if (path === '/produceComp') {
+      handleScroll(); // 페이지 진입시 즉시 실행
+
       window.addEventListener('scroll', handleScroll);
 
       // 컴포넌트가 언마운트되거나 경로가 변경될 때 이벤트 리스너를 정리
@@ -79,7 +82,7 @@ export default function Nav() {
               ${style['menu-button']} 
               ${isTransparent 
                 ?`${style.transparent_mode} text-white hover:bg-white/20`
-                : `${path === '/chg-schedule' && 'text-[#4FA969]'}`}`}
+                : `${path === '/produceComp' && 'text-[#4FA969]'} hover:bg-gray-100/50`}`}
         >
           회사소개
         </li>
@@ -87,7 +90,7 @@ export default function Nav() {
               ${style['menu-button']} 
               ${isTransparent 
                 ?`${style.transparent_mode} text-white hover:bg-white/20`
-                : `${path === '/chg-schedule' && 'text-[#4FA969]'}`}`}
+                : `${path === '/dd' && 'text-[#4FA969]'} hover:bg-gray-100/50`}`}
         >
           이용안내
         </li>
@@ -96,7 +99,7 @@ export default function Nav() {
               ${style['menu-button']} 
               ${isTransparent 
                 ?`${style.transparent_mode} text-white hover:bg-white/20`
-                : `${path === '/chg-schedule' && 'text-[#4FA969]'}`}`}
+                : `${path === '/' && 'text-[#4FA969]'} hover:bg-gray-100/50`}`}
         >
           충전소 찾기
         </li>
@@ -105,7 +108,7 @@ export default function Nav() {
               ${style['menu-button']} 
               ${isTransparent 
                 ?`${style.transparent_mode} text-white hover:bg-white/20`
-                : `${path === '/chg-schedule' && 'text-[#4FA969]'}`}`}
+                : `${path === '/chg-schedule' && 'text-[#4FA969]'} hover:bg-gray-100/50`}`}
         >
           충전스케줄링
         </li>

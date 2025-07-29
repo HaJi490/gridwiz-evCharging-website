@@ -43,8 +43,9 @@ export default function ReservationPanel({
     const [selectedTime, setSelectedTime] = useState<string[]>([]);
     const [getTimeslots, setGetTimeslots] = useState<TimeInfo[]>();
     const [timeFilter, setTimeFilter] = useState<string>('AM');
+    const [isClosing, setIsClosing] = useState<boolean>(false);
 
-    // 1. 외부 클릭시 닫기
+    // 1. 외부 클릭시 닫기 (모달의 이벤트 전파 차단을 위해 capture 단계에서 처리하지 않음)
     useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
             if (reservRef.current && !reservRef.current.contains(e.target as Node)) {
@@ -55,6 +56,15 @@ export default function ReservationPanel({
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, [onClose])
+
+    // 패널 닫기 애니메이션 처리
+    const handleClose = () => {
+        setIsClosing(true);
+        setTimeout(() => {
+            onClose();
+            setIsClosing(false);
+        }, 300);
+    };
 
     // 2. 날짜 포맷함수
     const formatDateString = (date: Date, type: DateFormatTp = 'kor') => {
@@ -218,16 +228,20 @@ export default function ReservationPanel({
     }
 
     return (
-        <div className='fixed inset-0 bg-black/30 rounded-lg'>
+        <div className='fixed inset-0 bg-black/30 rounded-lg animate-fadeIn'>
         <div
             ref={reservRef}
-            className='w-full pt-4 border-t fixed bottom-0 left-0 right-0 p-5 bg-white z-20 border-[#f2f2f2] rounded-lg'
+            className={`w-full pt-4 border-t fixed bottom-0 left-0 right-0 p-5 bg-white z-20 border-[#f2f2f2] rounded-lg  ${
+                    isClosing 
+                        ? 'transform translate-y-full opacity-0' 
+                        : 'transform translate-y-0 opacity-100 animate-slideInUp'
+                }`}
         >
             {/* <Toast message={toastMsg} setMessage={setToastMsg} /> */}
             {/* {showConfirmModal &&
                 <ConfirmModal message={confirmMsg} submsg={confSubMsg} onConfirm={() => handleReservation()} onCancel={() => setShowConfirmModal(false)} />
             } */}
-            <div>
+            <div className='animate-slideInUp'>
                 <p className=' text-gray-900 flex items-center font-medium'>
                     <span className='text-gray-500 font-normal mr-4 w-15 '>충전기</span>
                     {charger.chgerId}

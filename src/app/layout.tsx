@@ -5,6 +5,7 @@ import {Provider as JotaiProvider} from 'jotai';
 import TokenExpireWatcher from "@/components/TokenExpireWatcher";
 import ConditionalNav from "@/components/Nav/ConditionalNav";
 import ScrollToTopButton from "@/components/ScrollToTopButton";
+import Script from "next/script";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -36,6 +37,11 @@ export default function RootLayout({
             type="text/javascript"
             src={`https://dapi.kakao.com/v2/maps/sdk.js?appkey=${process.env.NEXT_PUBLIC_KAKAO_JSKEY}&autoload=false&libraries=services,clusterer`}
           ></script>
+          <Script
+          id="daum-postcode-script"
+          src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"
+          strategy="lazyOnload"
+          />
           {}
           <div className="fixed top-0 left-0 w-full z-50">
             <ConditionalNav/>

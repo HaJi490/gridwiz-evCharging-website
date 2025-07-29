@@ -35,6 +35,10 @@
     padding-right: 0.75rem;
 }
 
+.menu-button:hover {
+    background-color: [#4FA969];
+}
+
 /* '.transparent-mode' 클래스가 "없는(.not)" '.menu-button'에만 hover 효과를 적용 */
 .menu_button:not(.transparent-mode):hover {
   background-color: #f2f2f2;
