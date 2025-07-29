@@ -108,7 +108,7 @@ export default function page() {
             <hr className="flex-grow border-t border-[#666]"/>
           </div>
           <div className="flex justify-center gap-6">
-            <Link href= {`${process.env.NEXT_PUBLIC_BACKIP}/oauth2/authorization/naver`} >
+            <Link href= {`${process.env.NEXT_PUBLIC_BACKIP}/oauth2/authorization/google`} >
               <Image className="cursor-pointer " src="/Group 11.png" alt='gw11로고' width={40} height={40} priority/>
             </Link>
             <Link href={`${process.env.NEXT_PUBLIC_BACKIP}/oauth2/authorization/kakao`}>
