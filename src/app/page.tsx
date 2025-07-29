@@ -167,7 +167,7 @@ export default function Home() {
         const {totalNacsNum, chargingDemand, ...rest} = stat as ChargingStationPredictionResponseDto; // 예측dt에서 해당속성제거
         stationDto = rest;
       } else {
-        stationDto = stationDto;
+        stationDto = stat;
       }
 
       // - changeStatus 속성 추가
@@ -245,7 +245,13 @@ export default function Home() {
     (error) => {
       console.error('위치정보를 가져오지 못했습니다.', error);
       // 위치 못가져오면 부산대역- 디폴트값
-      const defaultPos: [number, number] = [35.1795, 129.0756]
+      // 1. 부산대 과학기술연구동
+      // 35.2300°N, 129.0880°E
+      
+      // 2. 부산대역
+      // 위도: 35.229927
+      // 경도: 129.089364 
+      const defaultPos: [number, number] = [35.2300, 129.0880]
       setMapCenter(defaultPos);
       setMyPos(defaultPos);
     }
@@ -363,11 +369,17 @@ export default function Home() {
     console.log('[Home] 3. 지도에서 마커 선택', markerId);
 
     // 해당마커의 상세정보 listItem에서 찾기
-    const selectedStationFromList = listItems.find(item => item.statId === markerId);
+    const selectedStationFromList = listItems.find(item => String(item.statId) === String(markerId));
 
     if(selectedStationFromList){
       setSelectionSource('map'); // 지도에서 선택 표시
-      setSelectedStation(selectedStationFromList);
+      // 버그를 피하기 위해 항상 새로운 객체를 전달합니다.
+      setSelectedStation({ ...selectedStationFromList });
+      // 디버깅용 로그 추가
+      console.log('✅ 찾음:', selectedStationFromList);
+    }else {
+      console.log('해당 마커 ID를 listItems에서 찾을 수 없음:', markerId);
+      console.log('현재 listItems:', listItems.map(item => item.statId));
     }
   },[listItems])
 

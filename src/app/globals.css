@@ -36,6 +36,20 @@ body {
      예: max-height: calc(100vh - 200px); */
 }
 
+/* 스크롤 없애기 22 */
+/* 스크롤바를 숨기는 유틸리티 클래스 */
+.custom-scrollbar-hide {
+  /* IE, Edge */
+  -ms-overflow-style: none;
+  /* Firefox */
+  scrollbar-width: none;
+}
+
+/* Chrome, Safari, Opera */
+.custom-scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
 .textlst.outside{
   color: #111827; 
   /* text-gray-900 */

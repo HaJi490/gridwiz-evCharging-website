@@ -100,7 +100,7 @@ export default function page() {
           </form>
           <div className='text-[#666] text-[15px] flex gap-3'>
               <Link href="/signup">회원가입</Link>
-              <span>비밀번호찾기</span>
+              {/* <span>비밀번호찾기</span> */}
           </div>
           <div className="flex justify-center my-4">
             <hr className="flex-grow border-t border-[#666]"/>

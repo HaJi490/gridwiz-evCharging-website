@@ -1,7 +1,7 @@
 'use client'
 
-import React,{useState, useEffect} from 'react'
-import Map, {Source, Layer, Marker,Popup } from 'react-map-gl/mapbox';
+import React,{useState,useRef, useEffect, useCallback} from 'react'
+import Map, {MapRef, Source, Layer, Marker,Popup } from 'react-map-gl/mapbox';
 import type { HeatmapLayer } from 'mapbox-gl'; 
 import 'mapbox-gl/dist/mapbox-gl.css';
 import type { FeatureCollection, Point } from 'geojson';
@@ -60,6 +60,29 @@ export default function DemandHeatmap({onApplyFilter, pointsDt, onSelectStat, in
 
   const [showFilter, setShowFilter] = useState<boolean>(false);
   const [currentFilter, setCurrentFilter] = useState<HeatmapFilter>(initialFilters);
+
+  const mapRef = useRef<MapRef | null>(null); // Map 인스턴스를 저장할 ref
+  const containerRef = useRef<HTMLDivElement | null>(null); // 지도의 부모 div를 가리킬 ref
+
+  // 3. ResizeObserver를 설정하는 useEffect를 추가합니다.
+  useEffect(() => {
+    const observer = new ResizeObserver(() => {
+        // 🚨 핵심 해결책: setTimeout으로 감싸줍니다.
+        setTimeout(() => {
+            mapRef.current?.resize();
+        }, 0);
+    });
+
+    if (containerRef.current) {
+        observer.observe(containerRef.current);
+    }
+
+    return () => {
+        if (containerRef.current) {
+            observer.unobserve(containerRef.current);
+        }
+    };
+}, []);
 
   // 히트맵 레이어의 스타일을 객체로 정의
   const heatmapLayerStyle : HeatmapLayer = {
@@ -227,10 +250,10 @@ export default function DemandHeatmap({onApplyFilter, pointsDt, onSelectStat, in
             className='custom-popup'
           >
             <div className='p-2 min-w-[200px]'>
-              <h3 className='font-semibold text-gray-800 mb-2'>{selectedMarker.properties.name}</h3>
+              <h3 className='font-semibold text-gray-800 text-lg mb-2'>{selectedMarker.properties.name}</h3>
               <div className='space-y-1 text-sm text-gray-600 mb-3'>
                 <p className='textlst outside'>
-                  <span className='textlst title w-10'>주소</span> 
+                  <span className='textlst title'>주소</span> 
                   {selectedMarker.properties.addr}
                 </p>
                 <p className='textlst outside '>

@@ -16,7 +16,10 @@ import { ActualChargingStationData, WeekdayDemand, ChargingStationResponseDto, C
 import type { FeatureCollection, Point } from 'geojson';
 import style from './dashboard.module.css'
 import { IoCalendarClearOutline } from "react-icons/io5";
-import { FiUser } from 'react-icons/fi'
+import { FiUser } from 'react-icons/fi';
+import { BiSolidCar } from "react-icons/bi";
+import { PiCarSimple } from "react-icons/pi";
+import { FiBell } from "react-icons/fi";
 
 
 const statusColorMap = {
@@ -92,29 +95,27 @@ const STATUS_DEFINITIONS = [
 ];
 
 // 예약, 멤버
-const kpiData = [
+const KPI_DEFINITIONS = [
     {
         title: 'Total Reservation',
-        value: 55,
-        change: 12,
-        changeType: 'down',
+        // value: 55,
         Icon: <IoCalendarClearOutline size={38} />,
     },
     {
-        title: 'All Users',
-        value: 230,
-        change: 3,
-        changeType: 'up',
-        Icon: <FiUser size={38} />,
+        title: 'Total EV',
+        // value: 230,
+        Icon: <PiCarSimple size={38} />,
     },
     {
-        title: 'Total EV',
-        value: 230,
-        change: 3,
-        changeType: 'up',
+        title: 'All Users',
+        // value: 230,
         Icon: <FiUser size={38} />,
     },
-
+    // {
+    //     title: 'Withdraw Users',
+    //     value: 230,
+    //     Icon: <BiSolidCar size={38} />,
+    // },
 ];
 
 // 메인
@@ -160,6 +161,13 @@ export default function page() {
     const [statDetailDt, setStatDetailDt] = useState<ChargingStationResponseDto | null>(null);
     const [selectedPeriod, setSelectedPeriod] = useState('Week');
     const [isLoadingStationDetail, setIsLoadingStationDetail] = useState(false);    //데이터 로딩상태관리
+
+    const [totalInfo, setTotalInfo] = useState<{
+        reserv: number,
+        car: number,
+        user: number,
+        // withdraw: number,
+    }>(null);
 
 
     // 1. 히트맵 데이터 요청(초기값 필요)
@@ -349,7 +357,65 @@ export default function page() {
         return dt;
     }, [totalStatDt])
 
-    // 3. 라인그래프(충전소) 데이터
+    // 3. 하단 정보가져오기
+    const getTotalInfo = async() => {
+        try{
+            const [reservRes, carRes, userAllRes] = await Promise.all([
+                // 전체예약
+                axios.get<number>(`http://${process.env.NEXT_PUBLIC_BACKIP}:8080/static/reserveTotal`,
+                    // { headers: { Authorization: `Bearer ${token}` } }
+                ),
+                // 전체 차량
+                axios.get<number>(`http://${process.env.NEXT_PUBLIC_BACKIP}:8080/static/carTotal`,
+                    // { headers: { Authorization: `Bearer ${token}` } }
+                ),
+                // 전체 회원
+                axios.get<number>(`http://${process.env.NEXT_PUBLIC_BACKIP}:8080/static/userTotal`,
+                    // { headers: { Authorization: `Bearer ${token}` } }
+                ),
+                // // 탈퇴 회원
+                // axios.get<number>(`http://${process.env.NEXT_PUBLIC_BACKIP}:8080/static/reservTotal`,
+                //     { headers: { Authorization: `Bearer ${token}` } }
+                // ),
+            ]);
+
+            setTotalInfo({
+                reserv: reservRes.data,
+                car: carRes.data,
+                user: userAllRes.data,
+            })
+        } catch(error) {
+            console.error('getTotalInfo 에러: ', error);
+        }
+    }
+
+    useEffect(()=>{
+        getTotalInfo();
+    },[])
+
+    // 3-2. 하단정보 가공
+    const kpiData = useMemo(()=>{
+        if(!totalInfo) return [];
+
+        const values = [
+            totalInfo.reserv,
+            totalInfo.car,
+            totalInfo.user,
+        ]
+
+        const conbinded =  KPI_DEFINITIONS.map((def, idx) => ({
+            ...def,
+            value: values[idx],
+        }));
+
+        console.log('kpi합성데이터: ', conbinded);
+        return conbinded;
+
+    },[totalInfo])
+
+
+
+    // 4. 라인그래프(충전소) 데이터
     const getStatGraphData = async (statId: string) => {
         setIsLoadingStationDetail(true);
 
@@ -389,7 +455,7 @@ export default function page() {
             <header className='flex justify-between items-center mb-8'>
                 <h1 className='text-4xl font bold  text-gray-800'>Dashboard</h1>
                 <button className='relative p-2 rounded-full cursor-pointer hover:bg-gray-200'>
-                    <IoCalendarClearOutline size={20} />
+                    <FiBell size={20} />
                     <span className="absolute top-1.5 right-1.5 block h-2 w-2 rounded-full bg-[#ef4444]" />
                 </button>
             </header>
@@ -452,16 +518,16 @@ export default function page() {
                     <>
                         {/* 충전소 수요그래프 */}
                         <div className={`${style.card} p-[30px] lg:col-span-8 md:col-span-6 `}>
-                            <div className='flex justify-between'>
-                                <h2><span className='font-mono border-b'>{statGraphDt[0].stationLocation}:{statDetailDt.statNm}</span> &ensp; 수요예측 </h2>
-                                <div className='flex gap-5'>
+                            <div className='flex justify-between items-center mb-3'>
+                                <h2><span className='font-mono border-b'>{statGraphDt[0].stationLocation}:{statDetailDt.statNm}</span> &nbsp; 수요예측 </h2>
+                                <div className='flex gap-2'>
                                     {periods.map(period => (
                                         <button
                                             key={period}
                                             onClick={() => setSelectedPeriod(period)}
-                                            className={`px-4 py-1.5 text-sm font-medium rounded-full transition-colors duration-200
+                                            className={`px-2 text-sm  rounded-full transition-colors duration-200
                                                     ${selectedPeriod === period
-                                                    ? 'bg-white text-gray-800 shadow-sm' // 활성화 상태 스타일
+                                                    ? 'bg-[#4FA969]/20 text-[#4FA969] ' // 활성화 상태 스타일
                                                     : 'text-gray-500 hover:bg-gray-200'    // 비활성화 상태 스타일
                                                 }
                                                 `}
@@ -478,19 +544,15 @@ export default function page() {
                         </div>
 
                         {/* 충전소 상세 */}
-                        <div className={`${style.card} p-[30px] lg:col-span-4 md:col-span-6`}>
+                        <div className={`${style.card} p-[30px] lg:col-span-4 md:col-span-6 h-[470px]`}>
                             <h2>충전소 상세</h2>
-                            {/* <div>충전기 현황</div>
-                            <div>
-                                <span className='w-2.5 h-2.5 rounded-full mr-3'></span>
-                            </div> */}
                             <StatDetail statDetail={statDetailDt} />
                         </div>
                     </>
                 )
                 }
 
-                {kpiData.map(item => (
+                {kpiData && kpiData.map(item => (
                     <div key={item.title} className={`${style.card} lg:col-span-3 md:col-span-3 p-[30px] min-h-[230px]`}>
                         <KpiCard item={item} />
                     </div>

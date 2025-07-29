@@ -80,15 +80,27 @@ export default function StationListPanel({
 
   // 3-2. 지도에서 선택됐을때 해당 리스트아이템으로 스크롤
   useEffect(() => {
+    console.log('스크롤 useEffect 실행:', {
+      selectedStation: selectedStation?.statId,
+      selectionSource,
+      hasListRef: !!listRef.current
+    });
+
     if(selectedStation && selectionSource === 'map' && listRef.current){
+       // 약간의 지연을 두고 스크롤 (DOM 업데이트 대기)
+      setTimeout(() => {
       const selectedElement = listRef.current.querySelector(`[data-station-id="${selectedStation.statId}"]`);
+      console.log('찾은 엘리먼트:', selectedElement);
       if(selectedElement){
         selectedElement.scrollIntoView({
           behavior: 'smooth',
           block: 'center'
-        })
+        });
+      } else {
+        console.log('해당 ID의 엘리먼트를 찾을 수 없음:', selectedStation.statId);
       }
-    }
+    }, 100);
+  }
   },[selectedStation, selectionSource])
 
   // 4. 상세정보 패널 닫기
@@ -142,7 +154,17 @@ export default function StationListPanel({
         } */}
         {/* 충전소 목록 */}
         <ul className='scrollContent' ref={listRef}>
-          {list.map((item, idx) => (
+          {list.map((item, idx) => {
+            // 👇 이 로그를 추가해서 타입을 확인해보세요
+    if (idx === 0) { // 한 번만 출력되도록
+        console.log('타입 비교:', {
+            'list item.statId': typeof item.statId,
+            'selectedStation.statId': typeof selectedStation?.statId
+        });
+    }
+
+
+            return(
             <li
               key={`${idx}-${item.statId}`}
               data-station-id={item.statId} // 스크롤용 데이터 속성추가
@@ -151,6 +173,7 @@ export default function StationListPanel({
                         `}  // 선택상태 스타일 추가
               onClick={()=>handleStationClick(item)}
             >
+              
               <div className='flex gap-1 text-[12px]'>
                 {item.parkingFree 
                   ?<span className={style.badgetrue}>
@@ -195,7 +218,7 @@ export default function StationListPanel({
                 }
               </div>
             </li>
-          ))}
+          )})}
         </ul>
         {/* 상세정보 패널 */}
         {selectedStation &&(

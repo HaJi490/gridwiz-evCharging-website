@@ -1,12 +1,13 @@
 /* 기본 appearance 제거 */
 .handleChg{
-    position: relative;
-    padding-bottom: 4px;
+    position: absolute;
+    padding-top: 10px;
     width: 100%;
     -webkit-appearance: none;
     appearance: none;
     background: transparent;
     cursor: pointer;
+    pointer-events: none; /* 중요: 트랙 부분의 클릭 이벤트를 무시하도록 설정 */
 }
 
 .handleChg::-webkit-slider-thumb{
@@ -19,6 +20,7 @@
     border: 2px solid white; /* 핸들 테두리 */
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* 그림자 */
     margin-top: -7px; /* 트랙 중앙에 오도록 조정 (트랙 높이 1px의 절반 + 핸들 높이의 절반) */
+    pointer-events: auto; /* 중요: 핸들 부분만 다시 클릭 가능하도록 설정 */
 }
 
 input[type="range"]::-moz-range-thumb {
@@ -28,6 +30,7 @@ input[type="range"]::-moz-range-thumb {
   background: #4FA969;
   border: 2px solid white;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  pointer-events: auto; /* 중요: 핸들 부분만 다시 클릭 가능하도록 설정 */
 }
 
 /* 트랙 (Runnable Track) 스타일 (선택 사항, 필요에 따라) */

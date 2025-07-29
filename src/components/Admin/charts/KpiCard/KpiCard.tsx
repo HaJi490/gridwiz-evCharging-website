@@ -3,8 +3,6 @@ import React from 'react'
 export type kpiCard = {
   title: string;
   value: number;
-  change: number;
-  changeType: 'up' | 'down';
   Icon: React.ReactElement;
 }
 

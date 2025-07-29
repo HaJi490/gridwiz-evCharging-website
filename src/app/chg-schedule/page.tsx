@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react'
 import axios from 'axios';
 import { useAtom } from 'jotai';
+import { useRouter } from 'next/navigation';
 
 import Toast from '@/components/Toast/Toast';
 import ConfirmModal from '@/components/ConfirmModal/ConfirmModal';
@@ -34,7 +35,10 @@ interface SelectionSlot {
 }
 
 export default function page() {
-  const [token] = useAtom(accessTokenAtom)                                            //📅
+  const [token] = useAtom(accessTokenAtom);
+  const [authChecked, setAuthChecked ] = useState(false); //인증 상태 확인 추적
+  const route = useRouter();
+  
   const [myReserv, setMyReserv] = useState<MyReservationDto>();
   const [viewMode, setViewMode] = useState<'예약완료' | '예약취소'>('예약완료');
 
@@ -48,7 +52,7 @@ export default function page() {
   const [showEditPanel, setShowEditPanel] = useState<boolean>(false);
   const [reservationToEdit, setReservationToEdit] = useState<Reservation | null>(null);
   const [availableTimeslots, setAvailableTimeslots] = useState<TimeInfo[]>();
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>();             //📅
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>();             
   const [currentSelection, setCurrentSelection] = useState<SelectionSlot[]>([]);
   const panelRef = useRef<HTMLDivElement>(null);
 
@@ -78,9 +82,19 @@ export default function page() {
     }
   }, [token]);
 
+  // useEffect(() => {
+  //   getMyReservation();
+  // }, [getMyReservation])
+
+  // ✨ 1. 로그인 상태를 먼저 확인하고, 로그인 되어있을 때만 데이터를 가져오는 useEffect
   useEffect(() => {
-    getMyReservation();
-  }, [getMyReservation])
+    if (token === null) { // jotai-persist는 로딩 중일 때 undefined일 수 있으므로 null을 명시적으로 확인
+      setAuthChecked(true); // 로딩이 끝났고, 비로그인 상태임을 확인
+    } else if (token) {
+      getMyReservation();
+      setAuthChecked(true); // 로딩이 끝났고, 로그인 상태임을 확인
+    }
+  }, [token, getMyReservation]);
 
   // 2. useMemo를 사용해 myReserv 데이터가 바뀔 때만 필터링
   const filteredReservations = useMemo(() => {
@@ -369,6 +383,29 @@ export default function page() {
     };
   }, [showEditPanel]);
 
+  // ✨ 1. 인증 상태가 확인되기 전에는 로딩 표시
+  if (!authChecked) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <p className="text-gray-500">페이지를 불러오는 중입니다...</p>
+      </div>
+    );
+  }
+
+  // ✨ 1. 비로그인 상태일 때 보여줄 화면
+  if (!token) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="text-center">
+          <p className="text-xl font-semibold text-gray-700">로그인이 필요한 페이지입니다.</p>
+          <p className="text-gray-500 mt-2">로그인 후 내 예약 내역을 확인해 보세요.</p>
+          {/* 필요하다면 로그인 페이지로 이동하는 버튼을 추가할 수 있습니다. */}
+          <button onClick={() => route.push('/login')} className="mt-4 px-4 py-2 bg-[#4FA969] text-white rounded-md cursor-pointer">로그인 하러 가기</button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
       <div className={'mainContainer w-full bg-[#F7F9FA] flex justify-center items-start p-4 md:p-8'}>
@@ -397,7 +434,7 @@ export default function page() {
                     : 'bg-white text-gray-700 border'
                     }`}
                 >
-                  취소한 에약
+                  취소한 예약
                 </button>
               </div>
               {filteredReservations && Object.entries(filteredReservations).map(([date, reservationList]) => { // 1. [날짜, 안의 배열]를 바로 비구조화 할당
@@ -416,10 +453,17 @@ export default function page() {
                       const firstSlot = r.slot[0];
                       const lastSlot = r.slot[r.slot.length - 1];
                       const chargerInfo = firstSlot.charger;
+                      // ✨ 2. 날짜가 지났는지 확인하는 로직 추가
+                      const today = new Date();
+                      today.setHours(0, 0, 0, 0); // 오늘 날짜의 자정으로 설정
+                      const reservationDate = new Date(date);
+                      const isPast = reservationDate < today;
+                      // 예약취소
+                      const isCanceled = viewMode === '예약취소';
 
                       return (
                         // 예약 카드
-                        <div key={r.reserveId} className="flex bg-white border-l-4 border-green-500 rounded-lg shadow-md mb-4 p-5 w-full cursor-pointer transition hover:shadow-lg">
+                        <div key={r.reserveId} className={`relative group flex ${!isPast && !isCanceled ? 'bg-white border-green-500' : 'bg-gray-300 border-gray-500' } border-l-4  rounded-lg shadow-md mb-4 p-5 w-full cursor-pointer transition hover:shadow-lg`}>
 
                           {/* 👈 1. 시간 정보를 왼쪽에 배치하되, 레이아웃을 해치지 않도록 개선 */}
                           <div className='flex flex-col items-center justify-center pr-5 mr-5 border-r border-gray-200'>
@@ -433,9 +477,9 @@ export default function page() {
                             {/* 카드 헤더: 충전소 이름과 태그 */}
                             <div className='flex justify-between items-start'>
                               <h3 className='text-xl font-bold text-gray-800'>{chargerInfo.storeInfo.statNm}</h3>
-                              <div className='text-xs font-semibold rounded-full px-3 py-1 bg-green-100 text-green-700 whitespace-nowrap'>
+                              {/* <div className='text-xs font-semibold rounded-full px-3 py-1 bg-green-100 text-green-700 whitespace-nowrap'>
                                 AI 추천
-                              </div>
+                              </div> */}
                             </div>
 
                             {/* 카드 본문: 주소 및 충전기 타입 */}
@@ -448,14 +492,6 @@ export default function page() {
                                 <span className='text-gray-900 font-medium mr-4 w-12'>타입</span>
                                 <span className='flex items-center'>
                                   {chargerInfo.storeInfo.enabledCharger.join(', ')}
-                                  {/* {chgerCodeToNm(r.chgerType).split('+').map((part, idx, arr) => (
-                                  <React.Fragment key={idx}>
-                                    <span>{part}</span>
-                                    {idx < arr.length - 1 && (
-                                      <span className='text-gray-300 mx-1'><LuDot /></span>
-                                    )}
-                                  </React.Fragment>
-                                ))} */}
                                 </span>
                               </p>
                             </div>
@@ -476,6 +512,18 @@ export default function page() {
                                 </button>
                               </div>
                             </div>
+
+                            {/* ✨ 2. 비활성화된 카드 위에 호버 시 나타나는 삭제 버튼 */}
+                            {isPast && !isCanceled && (
+                              <div className="absolute inset-0 bg-black/20 bg-opacity-10 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                <button
+                                  onClick={() => handleConfirmModal(r.reserveId)}
+                                  className="px-4 py-2 bg-[#232323] text-gray-200 text-sm font-semibold rounded-full shadow-lg cursor-pointer"
+                                >
+                                  기록 삭제
+                                </button>
+                              </div>
+                            )}
                           </div>
                         </div>
                       )

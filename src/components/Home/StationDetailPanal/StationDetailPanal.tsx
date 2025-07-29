@@ -8,7 +8,7 @@ import ConfirmModal from '@/components/ConfirmModal/ConfirmModal'
 import { StationListItem, ChargerInfoMap, ChargerInfoItem } from '@/types/dto'
 import codeToNm from '../../../db/chgerType.json'
 import { IoCalendarClearOutline } from "react-icons/io5";
-import { FiBattery, FiBatteryCharging, FiXCircle } from "react-icons/fi";
+import { FiBattery, FiBatteryCharging, FiXCircle, FiZap } from "react-icons/fi";
 import { LuDot } from "react-icons/lu";
 import { BiSolidNavigation } from "react-icons/bi";
 
@@ -327,15 +327,24 @@ export default function StationDetailPanal({
                                 </p>
                             }
                         </div> */}
-                        <div className='flex justify-center items-center gap-5'>
+                        {/* <div className='flex justify-center items-center gap-5'>
                             <button>
                                 길찾기
+                            </button> */}
+                            {viewMode !== 'reserv' 
+                            ?
+                                <button className='flex justify-center items-center gap-2 border border-[#afafaf] text-[#666] hover:bg-gray-[#afafaf] rounded py-1.5 cursor-pointer' 
+                                        onClick={()=>handleModeReserv()}>
+                                    <IoCalendarClearOutline size={15} className='mb-1'/>
+                                    예약
+                                </button>
+                            :<button className='flex justify-center items-center gap-2 border border-[#afafaf] text-[#666] hover:bg-gray-[#afafaf] rounded py-1.5 cursor-pointer' 
+                                        onClick={()=>handleModeReserv()}>
+                                <FiZap size={15} className='mb-1'/>
+                                실시간 충전현황
                             </button>
-                            <button className='cursor-pointer' onClick={()=>handleModeReserv()}>
-                                <IoCalendarClearOutline/>
-                                예약
-                            </button>
-                        </div>
+                            }
+                        {/* </div> */}
                     </header>
                     {/* 실시간 충전현황 */}
                     {viewMode !== 'reserv'

@@ -12,10 +12,6 @@ const totalMax = 300
 const totalMin = 0
 
 export default function Slider({min, max, setMinMax}: sliderProps) {
-  // const [minValue, setMinValue] = useState<number>(min);
-  // const [maxValue, setMaxValue] = useState<number>(max);
-
-
   // 1. 핸들 값 업데이트
   const handleMinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = Math.min(Number(e.target.value), max - 50); //최소간격 확보
@@ -28,14 +24,6 @@ export default function Slider({min, max, setMinMax}: sliderProps) {
     // setMaxValue(value);
     setMinMax(min, value);
   }
-
-  // // 2. 핸들 위치 업데이트 -------------------------FIXME 슬라이더 핸들위에 수치가 뜰수있게
-  // const updateHandlePositions = () => {
-  //   if(minRef.current){
-  //     const minVal = Number(minRef.current.value);
-      
-  //   }
-  // }
 
   return (
     <div className="w-full px-4">

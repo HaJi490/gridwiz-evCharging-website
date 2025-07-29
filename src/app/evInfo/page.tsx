@@ -71,7 +71,6 @@ export default function page() {
         
         const requestBody = {
             brand: brand,
-            userCarId: 0,
             model: model,
             mainModel: true
         }

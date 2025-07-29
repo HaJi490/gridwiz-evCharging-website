@@ -82,33 +82,35 @@ export default function StatDetail({ statDetail }: statDetailProps) {
     }
 
     return (
-        <div className='flex flex-col'>
+        <div className='flex flex-col h-full'>
             <header className='flex justify-between items-center mb-4'>
                 <span className="font-medium">충전소 현황</span>
-                {Object.entries(statusCnt).map(([stat, count]) => {
-                    if (count === 0) return null;  // 0개는 표시하지않음
-                    const statusInfo = statusMap[stat as keyof typeof statusMap];
-
-                    return (
-                        <div key={stat} className="flex items-center gap-1">
-                            <span className='w-2 h-2 rounded-full mr-2' style={{ backgroundColor: statusInfo.dotColor }}></span>
-                            <span className='text-sm font-medium' style={{ color: statusInfo.dotColor }}>{count} 대</span>
-                        </div>
-                    )
-                })}
+                <div className='flex gap-5'>
+                    {Object.entries(statusCnt).map(([stat, count]) => {
+                        if (count === 0) return null;  // 0개는 표시하지않음
+                        const statusInfo = statusMap[stat as keyof typeof statusMap];
+                        
+                        return (
+                            <div key={stat} className="flex items-center gap-2">
+                                <span className='w-2 h-2 rounded-full' style={{ backgroundColor: statusInfo.dotColor }}></span>
+                                <span className='text-sm font-medium' style={{ color: statusInfo.dotColor }}>{count} 대</span>
+                            </div>
+                        )
+                    })}
+                </div>
             </header>
 
             {/* 구분선 */}
             <hr className='border-gray-100 mb-4' />
 
             {/* 충전기 목록*/}
-            <main className='space-y-4 overflow-y-auto'>
+            <main className='space-y-4 overflow-y-auto flex-1 min-h-0 custom-scrollbar-hide'>
                 {chargers.map(c => {
                     // 충전기 상태정보
                     const statusInfo = statusMap[c.stat as keyof typeof statusMap] || statusMap['9'];
 
                     return (
-                        <div key={c.chgerId} className='flex items-center justify-between'>
+                        <div key={c.chgerId} className='grid grid-cols-[1fr_auto_1fr] gap-4 items-center'>
                             <span className='font-mono text-gray-500 w-20'>{c.chgerId}</span>
                             <span className='px-3 py-1 text-xs font-bold rounded-full ' style={ statusInfo.colorlst }>
                                 {statusInfo.text}
