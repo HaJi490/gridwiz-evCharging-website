@@ -43,7 +43,7 @@ import style from './ChargingDemandLineChart.module.css'
     if (active && payload && payload.length) {
       return (
         <div className={style.custom_tooltip}>
-          <p className={style.custom_label}>{`수요량: ${payload[0].value}`}</p>
+          <p className={style.custom_label}>{`수요량: ${payload[0].value.toFixed(3)}`}</p>
           <p className={style.custom_intro}>{`요일: ${label}`}</p>
         </div>
       );

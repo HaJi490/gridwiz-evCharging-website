@@ -41,7 +41,7 @@ export default function page() {
 
     console.log(id, pwd);
     try{
-      const res = await axios.post(`http://${process.env.NEXT_PUBLIC_OAUTH2}:8080/login`,{
+      const res = await axios.post(`http://${process.env.NEXT_PUBLIC_BACKIP}:8080/login`,{
         username: id,
         password: pwd
       },{

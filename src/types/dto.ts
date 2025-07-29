@@ -137,6 +137,14 @@ export interface ActualChargingStationData {
     chargerInfo: Record<string, any> | null; 
 }
 
+// (Manager) 대시보드 실시간상태 응답
+export interface ChargerTotalStatusData {
+    totalCharger: number;
+    totalUseableCharger: number;
+    totalDisableCharger: number;
+    stat: number[]; // [1~5, 9] 상태 순서대로 개수
+};
+
 // 충전소별 시게열응답
 export type WeekdayDemand = {
     stationLocation: string;
@@ -182,6 +190,61 @@ export interface TimeInfo {
     startTime: string;    // 예: "00:00:00"
     endTime: string;      // 예: "00:29:59"
     enabled: boolean;
+}
+
+// 충전스케줄링 - 예약정보
+// chargerId 타입
+interface ChargerId {
+  statId: string;
+  chgerId: string;
+}
+
+// storeInfo 타입
+interface StoreInfo {
+  statId: string;
+  statNm: string;
+  addr: string;
+  lat: number;
+  lng: number;
+  parkingFree: boolean;
+  limitYn: boolean;
+  enabledCharger: string[];
+  busiId: string;
+  busiNm: string;
+  chargerNm: number | null;
+}
+
+// charger 타입
+export interface Charger {
+  chargerId: ChargerId;
+  chgerType: string;
+  output: number;
+  storeInfo: StoreInfo;
+}
+
+// slot 타입
+export interface Slot {
+  timeId: number;
+  charger: Charger;
+  date: string; // 충전하는 날짜
+  startTime: string;
+  endTime: string;
+  enabled: boolean;
+}
+
+// 예약데이터
+export interface Reservation {
+  reserveId: number;
+  username: string;
+  slot: Slot[];
+  reserveDate: string;  // 내가 예약한 날짜
+  updateDate: string;
+  reseverState: '예약완료' | '예약취소';
+}
+
+// getMyReservation의 전체 응답 타입
+export interface MyReservationDto{
+  [date: string]: Reservation[];
 }
 
 // 마이페이지 - 회원정보

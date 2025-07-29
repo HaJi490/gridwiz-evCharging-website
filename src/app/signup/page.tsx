@@ -266,7 +266,7 @@ export default function signup() {
     }
 useEffect(()=>{  
     isValidPassword(pwd)
-},[isValidPassword]);
+},[pwd]);
 
   return (
         <main className="w-full py-30 flex flex-col justify-center items-center px-4">
@@ -379,7 +379,7 @@ useEffect(()=>{
                 </div>
             </div>
             <div className="flex gap-5">
-                <button className={`${style.btn} ${style.cancel} cursor-pointer`}>취소</button>
+                <button onClick={() => router.back()} className={`${style.btn} ${style.cancel} cursor-pointer`}>취소</button>
                 <button onClick={()=>{submitMember()}} className={`${style.btn} ${style.confirm} cursor-pointer`}>가입</button>
             </div>
         </main>

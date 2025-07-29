@@ -1,0 +1,14 @@
+.inputbox {
+    padding-left: 1rem; 
+    padding-right: 1rem;
+    padding-top: 0.75rem; 
+    padding-bottom: 0.75rem;
+    width: 100%;
+    border-radius: 0.25rem;
+    border: 1px solid #afafaf
+    /* px-4 py-3 w-full max-w-[450px] rounded border border-[#afafaf] focus:ouline-none */
+}
+
+.inputbox:focus {
+    outline-color: #4FA969;
+}

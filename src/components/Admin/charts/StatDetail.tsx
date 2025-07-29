@@ -82,7 +82,7 @@ export default function StatDetail({ statDetail }: statDetailProps) {
     }
 
     return (
-        <div>
+        <div className='flex flex-col'>
             <header className='flex justify-between items-center mb-4'>
                 <span className="font-medium">충전소 현황</span>
                 {Object.entries(statusCnt).map(([stat, count]) => {
@@ -102,7 +102,7 @@ export default function StatDetail({ statDetail }: statDetailProps) {
             <hr className='border-gray-100 mb-4' />
 
             {/* 충전기 목록*/}
-            <main className='space-y-4'>
+            <main className='space-y-4 overflow-y-auto'>
                 {chargers.map(c => {
                     // 충전기 상태정보
                     const statusInfo = statusMap[c.stat as keyof typeof statusMap] || statusMap['9'];

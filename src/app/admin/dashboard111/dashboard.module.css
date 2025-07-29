@@ -1,0 +1,249 @@
+/* --- 등장 애니메이션 Keyframes --- */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Dashboard.css */
+
+:root {
+  /* --bg-color: #f0f2f5;  */
+  --card-bg-color: #ffffff;
+  --text-color-primary: #1a202c;
+  --text-color-secondary: #718096;
+  --border-radius: 16px;
+  --gap: 24px;
+  /*  👈 바로 이 부분입니다! */
+  --shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+}
+
+
+/* --- 전체 페이지 스타일 --- */
+.dashboard_page {
+  background-color: var(--bg-color);
+  padding: var(--gap);
+  min-height: 100vh;
+}
+
+/* --- 헤더 --- */
+.dashboard_header {
+  margin-bottom: 18px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.dashboard_header h1 {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: var(--text-color-primary);
+  margin: 0;
+}
+
+.dashboard_header p {
+  color: var(--text-color-secondary);
+  margin-top: 4px;
+}
+
+
+/* --- 기본 카드 스타일 --- */
+.card {
+  background-color: var(--card-bg-color);
+  border-radius: var(--border-radius);
+  padding: var(--gap);
+  box-shadow: var(--shadow);
+  color: var(--text-color-primary);
+  /* 👇 애니메이션을 위한 핵심 속성 */
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  /* 👇 등장 애니메이션 적용 */
+  animation: fadeInUp 0.5s ease-out forwards;
+  opacity: 0;
+  /* 애니메이션 시작 전에는 투명 */
+  /* 영역밖의 자식요소 자르기 */
+  overflow: hidden; 
+}
+
+.nocard{
+  color: var(--text-color-primary);
+  /* 👇 애니메이션을 위한 핵심 속성 */
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  /* 👇 등장 애니메이션 적용 */
+  animation: fadeInUp 0.5s ease-out forwards;
+  opacity: 0;
+}
+
+.cardmap {
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  animation: fadeInUp 0.5s ease-out forwards;
+  /* 애니메이션 시작 전에는 투명 */
+  opacity: 0;
+  
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  /* 호버 시 살짝 위로 이동 */
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+}
+
+.card h2 {
+  margin-top: 0;
+  /* margin-bottom: 20px; */
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.nocard h2{
+  margin-bottom: 15px;
+  /* margin-bottom: 20px; */
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.card_content {
+  color: var(--text-color-secondary);
+  /* 실제 콘텐츠가 들어갈 영역 */
+  height: 350px;
+  /* 원하는 차트의 높이 */
+  width: 100%;
+  /* 너비는 100%로 설정하는 것이 좋습니다. */
+}
+
+/* --- 상단 통계 카드 스타일 --- */
+.stat_grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 3rem;
+  margin-bottom: var(--gap);
+}
+
+.stat_card .stat_value {
+  font-size: 3.5rem;
+  font-weight: 500;
+  /* margin-bottom: 8px; */
+}
+
+.stat_card .stat-subvalue {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text-color-secondary);
+  margin-left: 8px;
+}
+
+.stat_card .stat_label {
+  font-size: 0.9rem;
+  color: var(--text-color-secondary);
+}
+
+
+/* --- 메인 그리드 (데스크톱 - 12 컬럼) --- */
+.dashboard_grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  /* 12 컬럼 그리드 시스템 */
+  gap: var(--gap);
+}
+
+/* 데스크톱 카드 배치 */
+.card_borrowers {
+  grid-column: span 6;
+}
+
+/* 6칸 차지 */
+.card_map {
+  grid-column: span 12;
+  position: relative;
+  z-index: 20;
+}
+
+/* 6칸 차지 */
+.card_details {
+  grid-column: span 5;
+}
+
+/* 8칸 차지 */
+.card_trend {
+  grid-column: span 4;
+}
+
+/* 4칸 차지 */
+
+/* 등장 애니메이션 지연 효과 (순서대로 나타나도록) */
+.dashboard_header {
+  animation-delay: 0.2s;
+}
+
+.dashboard_grid {
+  animation-delay: 0.3s;
+}
+
+
+/* --- 태블릿 반응형 (1024px 이하) --- */
+@media (max-width: 1024px) {
+  .dashboard_grid {
+    grid-template-columns: repeat(6, 1fr);
+    /* 6 컬럼으로 변경 */
+  }
+
+  /* 태블릿 카드 배치 */
+  .card_borrowers {
+    grid-column: span 6;
+  }
+
+  /* 가로 전체 */
+  .card_map {
+    grid-column: span 6;
+  }
+
+  /* 가로 전체 */
+  .card_details {
+    grid-column: span 6;
+  }
+
+  /* 가로 전체 */
+  .card_trend {
+    grid-column: span 6;
+  }
+
+  /* 가로 전체 */
+}
+
+
+/* --- 모바일 반응형 (767px 이하) --- */
+@media (max-width: 767px) {
+  :root {
+    --gap: 16px;
+    /* 모바일에서는 간격을 조금 줄임 */
+  }
+
+  .dashboard_header h1 {
+    font-size: 2rem;
+  }
+
+  .stat_grid {
+    grid-template-columns: 1fr;
+    /* 1열로 변경 */
+  }
+
+  .dashboard_grid {
+    grid-template-columns: 1fr;
+    /* 1열로 변경 */
+  }
+
+  /* 모바일 카드 배치 (모두 가로 전체 차지) */
+  .card_borrowers,
+  .card_map,
+  .card_details,
+  .card_trend {
+    grid-column: span 1;
+    /* grid-column 설정을 초기화하는 효과 */
+  }
+}

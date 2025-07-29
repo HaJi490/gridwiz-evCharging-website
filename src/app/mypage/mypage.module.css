@@ -1,0 +1,49 @@
+.mypageContainer{
+    width: 70%;
+    max-width: 1100px;
+    display: flex;
+    margin-top: 5rem;
+    /* w-7/10 max-w-[1100px] flex mt-15 */
+    background-color: #F7F9FA; /* or #EEF1F6 */
+}
+
+/* 탭메뉴 */
+.filterList {
+    /* 현재 스타일 유지 */
+    padding: 8px 12px;
+    border-bottom: 4px solid transparent; /* 기본 밑줄 투명 */
+    font-weight: 500;
+    color: #888;
+    transition: all 0.2s ease-in-out;
+    cursor: pointer;
+}
+
+.filterList.active {
+    border-color: #4FA969; /* 선택 시 밑줄 색상 */
+    color: #4FA969; /* 선택 시 글자 색상 */
+    font-weight: 600;
+}
+
+/* 회원정보 수정 */
+.inputbox {
+    padding-left: 1rem; 
+    padding-right: 1rem;
+    padding-top: 0.75rem; 
+    padding-bottom: 0.75rem;
+    width: 100%;
+    border-radius: 0.25rem;
+    border: 1px solid #afafaf
+    /* px-4 py-3 w-full max-w-[450px] rounded border border-[#afafaf] focus:ouline-none */
+}
+
+.inputbox:focus {
+    outline-color: #4FA969;
+}
+
+.noneInput {
+    padding-left: 1rem; 
+    padding-right: 1rem;
+    padding-top: 0.75rem; 
+    padding-bottom: 0.75rem;
+    width: 100%;
+}

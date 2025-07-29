@@ -145,7 +145,7 @@ export default function page() {
                 </div> */}
             </div>
             <div className="flex gap-5">
-                <button className={`${style.btn} ${style.cancel}`}>이전</button>
+                <button onClick={() => route.back()} className={`${style.btn} ${style.cancel}`}>이전</button>
                 <button onClick={()=> {submitEV()}} className={`${style.btn} ${style.confirm}`}>등록</button>
             </div>
         </main>

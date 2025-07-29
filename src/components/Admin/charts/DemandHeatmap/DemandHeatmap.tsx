@@ -66,7 +66,7 @@ export default function DemandHeatmap({onApplyFilter, pointsDt, onSelectStat, in
     id:'heatmap',
     type: 'heatmap',
     source: 'my-heatmap-data', // 사용할 Source의 id
-    maxzoom: 15,
+    // maxzoom: 15,
     paint: {
       // 이 속성을 사용하려면 GeoJSON의 properties에 'intensity'가 있어야 합니다.
       'heatmap-weight': [
@@ -196,8 +196,8 @@ export default function DemandHeatmap({onApplyFilter, pointsDt, onSelectStat, in
                 <div className={`rounded-full cursor-pointer transition-all duration-200 hover:scale-125 
                                   ${
                                     isSelected
-                                    ? 'bg-blue-600 ring-4 ring-blue-300 ring-opacity-50'
-                                    : 'bg-red-500 hover:bg-red-600'
+                                    ? 'bg-[#4FA969] ring-8 ring-[#4FA969]/20 ring-opacity-50'
+                                    : 'bg-gray-500 hover:bg-gray-600'
                                   }
                               `}
                     style={{
@@ -233,13 +233,13 @@ export default function DemandHeatmap({onApplyFilter, pointsDt, onSelectStat, in
                   <span className='textlst title w-10'>주소</span> 
                   {selectedMarker.properties.addr}
                 </p>
-                <p className='textlst outside'>
+                <p className='textlst outside '>
                   <span className='textlst title'>운영기관</span> 
                   {selectedMarker.properties.busiNm}
                 </p>
                 <p className='textlst outside'>
                   <span className='textlst title'>수요</span> 
-                  {selectedMarker.properties.demand}
+                  {selectedMarker.properties.demand.toPrecision(4)}
                 </p>
               </div>
               <button onClick={handleShowDetail} className='w-full rounded-sm bg-black text-white py-1 hover:bg-gray-800 transition-colors cursor-pointer'>
@@ -262,7 +262,6 @@ export default function DemandHeatmap({onApplyFilter, pointsDt, onSelectStat, in
                   onClick={() => setShowFilter((prev) => !prev)}>
             <FiFilter size={20} />
           </button>
-
           {showFilter 
           ? (
             <div className='absolute right-full top-0 transform rounded-md mr-2 bg-black/50 py-3 px-4'>
