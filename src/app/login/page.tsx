@@ -108,13 +108,13 @@ export default function page() {
             <hr className="flex-grow border-t border-[#666]"/>
           </div>
           <div className="flex justify-center gap-6">
-            <Link href= {`http://${process.env.NEXT_PUBLIC_BACKIP}:8080/oauth2/authorization/naver`} >
+            <Link href= {`${process.env.NEXT_PUBLIC_BACKIP}/oauth2/authorization/naver`} >
               <Image className="cursor-pointer " src="/Group 11.png" alt='gw11로고' width={40} height={40} priority/>
             </Link>
-            <Link href={`http://${process.env.NEXT_PUBLIC_BACKIP}:8080/oauth2/authorization/kakao`}>
+            <Link href={`${process.env.NEXT_PUBLIC_BACKIP}/oauth2/authorization/kakao`}>
               <Image className="cursor-pointer" src="/Group 12.png" alt='gw12로고' width={40} height={40} priority/>
             </Link>
-            <Link href={`http://${process.env.NEXT_PUBLIC_BACKIP}:8080/oauth2/authorization/github`}>
+            <Link href={`${process.env.NEXT_PUBLIC_BACKIP}/oauth2/authorization/github`}>
               <Image className="cursor-pointer" src="/Group 13.png" alt='gw13로고' width={40} height={40} priority/>
             </Link>
           </div>
