@@ -9,7 +9,7 @@ export default function page() {
     const [, setToken] = useAtom(accessTokenAtom);
     const [, setTokenExpireAt] = useAtom(tokenExpireAtAtom);
     const fetchJwtToken = async ()=>{
-        await fetch(`${process.env.NEXT_PUBLIC_BACKIP}/api/user`,{
+        await fetch(`${process.env.NEXT_PUBLIC_OAUTH2}/api/user`,{
             method:"GET",
             credentials: "include"
         }).then((res)=>{
