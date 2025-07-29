@@ -111,11 +111,14 @@ export default function page() {
             <Link href= {`${process.env.NEXT_PUBLIC_OAUTH2}/oauth2/authorization/google`} >
               <Image className="cursor-pointer " src="/Group 11.png" alt='gw11로고' width={40} height={40} priority/>
             </Link>
+            <Link href= {`${process.env.NEXT_PUBLIC_OAUTH2}/oauth2/authorization/naver`} >
+              <Image className="cursor-pointer " src="/Group 11.png" alt='gw12로고' width={40} height={40} priority/>
+            </Link>
             <Link href={`${process.env.NEXT_PUBLIC_OAUTH2}/oauth2/authorization/kakao`}>
-              <Image className="cursor-pointer" src="/Group 12.png" alt='gw12로고' width={40} height={40} priority/>
+              <Image className="cursor-pointer" src="/Group 12.png" alt='gw13로고' width={40} height={40} priority/>
             </Link>
             <Link href={`${process.env.NEXT_PUBLIC_OAUTH2}/oauth2/authorization/github`}>
-              <Image className="cursor-pointer" src="/Group 13.png" alt='gw13로고' width={40} height={40} priority/>
+              <Image className="cursor-pointer" src="/Group 13.png" alt='gw14로고' width={40} height={40} priority/>
             </Link>
           </div>
               
