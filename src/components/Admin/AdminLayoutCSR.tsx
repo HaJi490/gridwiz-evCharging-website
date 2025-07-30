@@ -6,7 +6,7 @@ import type { ReactNode } from 'react';
 
 
 export default function AdminLayoutCSR({ children }: { children: ReactNode }) {
-    const [expanded, setExpanded] = useState(true);
+    const [expanded, setExpanded] = useState(false);
 
     return (
         <div className="w-full h-screen flex overflow-hidden">

@@ -98,11 +98,22 @@ export interface ChargingStationPredictionResponseDto extends BaseChargingStatio
     totalNacsNum: number;
     chargingDemand: number;
 }
-
 // (Member) 리스트 패널의 아이템을 위한 새로운 타입을 선언합니다.
 export interface StationListItem extends ChargingStationResponseDto {
-    changeStatus: 'increase' | 'decrease' | 'same' | 'none';
+    // changeStatus: 'increase' | 'decrease' | 'same' | 'none';
+    predTag?: string;
+    minute?: number; // 소요시간
 }
+
+// (Member) 예측응답 dto ver.2
+export interface RecommendedStationDto extends BaseChargingStationDto {
+    minute: number;
+    predTag: string;
+    bestChoice: string | null;
+    totalNacsNum: number;
+    chargingDemand: number;
+}
+
 
 // (Manager) 대시보드 히트맵 응답
 export interface ActualChargingStationData {
@@ -123,7 +134,7 @@ export interface ActualChargingStationData {
     totalMidNum: number;
     chargeMidNum: number;
     // 새로 추가된 필드
-    totalNacsNum: number; 
+    totalNacsNum: number;
     // 새로 추가된 필드
     chargingDemand: number;
     chargeNum: number;
@@ -134,7 +145,7 @@ export interface ActualChargingStationData {
     // chargerInfo는 객체이거나 null일 수 있습니다.
     // ChargerInfoItem 타입을 모르므로 우선 'any'로 지정하고,
     // 나중에 정확한 타입으로 교체하는 것을 권장합니다.
-    chargerInfo: Record<string, any> | null; 
+    chargerInfo: Record<string, any> | null;
 }
 
 // (Manager) 대시보드 실시간상태 응답
@@ -148,7 +159,7 @@ export interface ChargerTotalStatusData {
 // 충전소별 시게열응답
 export type WeekdayDemand = {
     stationLocation: string;
-    dayOfWeek: 
+    dayOfWeek:
     | "Monday"
     | "Tuesday"
     | "Wednesday"
@@ -158,6 +169,21 @@ export type WeekdayDemand = {
     | "Sunday";
     kwhRequest: number;
 };
+
+// (관리자) 멤버관리
+export interface User {
+    username: string;
+    nickname: string;
+    password: string; // 비밀번호는 보통 응답 값에 포함되지 않으므로 optional(?)로 처리하는 것이 안전할 수 있습니다.
+    phoneNumber: string;
+    email: string;
+    sex: string;
+    zipcode: string;
+    roadAddr: string;
+    detailAddr: string;
+    enabled: boolean;
+    createAt: string; // ISO 8601 형식의 날짜는 string으로 받는 것이 일반적입니다.
+}
 
 // 📍회원가입 reqest
 export interface SignupRequest {
@@ -195,71 +221,121 @@ export interface TimeInfo {
 // 충전스케줄링 - 예약정보
 // chargerId 타입
 interface ChargerId {
-  statId: string;
-  chgerId: string;
+    statId: string;
+    chgerId: string;
 }
 
 // storeInfo 타입
 interface StoreInfo {
-  statId: string;
-  statNm: string;
-  addr: string;
-  lat: number;
-  lng: number;
-  parkingFree: boolean;
-  limitYn: boolean;
-  enabledCharger: string[];
-  busiId: string;
-  busiNm: string;
-  chargerNm: number | null;
+    statId: string;
+    statNm: string;
+    addr: string;
+    lat: number;
+    lng: number;
+    parkingFree: boolean;
+    limitYn: boolean;
+    enabledCharger: string[];
+    busiId: string;
+    busiNm: string;
+    chargerNm: number | null;
 }
 
 // charger 타입
 export interface Charger {
-  chargerId: ChargerId;
-  chgerType: string;
-  output: number;
-  storeInfo: StoreInfo;
+    chargerId: ChargerId;
+    chgerType: string;
+    output: number;
+    storeInfo: StoreInfo;
 }
 
 // slot 타입
 export interface Slot {
-  timeId: number;
-  charger: Charger;
-  date: string; // 충전하는 날짜
-  startTime: string;
-  endTime: string;
-  enabled: boolean;
+    timeId: number;
+    charger: Charger;
+    date: string; // 충전하는 날짜
+    startTime: string;
+    endTime: string;
+    enabled: boolean;
 }
 
 // 예약데이터
 export interface Reservation {
-  reserveId: number;
-  username: string;
-  slot: Slot[];
-  reserveDate: string;  // 내가 예약한 날짜
-  updateDate: string;
-  reseverState: '예약완료' | '예약취소';
+    reserveId: number;
+    username: string;
+    slot: Slot[];
+    reserveDate: string;  // 내가 예약한 날짜
+    updateDate: string;
+    reseverState: '예약완료' | '예약취소';
 }
 
 // getMyReservation의 전체 응답 타입
-export interface MyReservationDto{
-  [date: string]: Reservation[];
+export interface MyReservationDto {
+    [date: string]: Reservation[];
 }
 
 // 마이페이지 - 회원정보
 export interface User {
-    username: string;         // 사용자 아이디
-    nickname: string;         // 닉네임
-    password: string | null;  // 비밀번호 (null 허용)
-    phoneNumber: string;      // 전화번호
-    email: string;            // 이메일
-    sex: 'male' | 'female';   // 성별
-    address: string;          // 주소
-    enabled: boolean;         // 활성화 여부
-    createAt: string;         // 생성일시 (ISO 형식 문자열)
-};
+  username: string;
+  nickname: string;
+  password: string; // 응답 값에 보통 비밀번호는 제외되므로 optional 처리
+  phoneNumber: string;
+  email: string;
+  sex: string | null; // null 값이 올 수 있음
+  zipcode: string | null;
+  role: string[]; // 문자열 배열
+  roadAddr: string | null;
+  detailAddr: string | null;
+  enabled: boolean;
+  createAt: string; // ISO 형식 날짜는 string으로 받음
+}
 
+/**
+ * 정렬 관련 정보입니다.
+ */
+// export interface SortInfo {
+//   empty: boolean;
+//   sorted: boolean;
+//   unsorted: boolean;
+// }
+
+// /**
+//  * 페이지네이션 세부 정보입니다.
+//  */
+// export interface Pageable {
+//   pageNumber: number;
+//   pageSize: number;
+//   sort: SortInfo;
+//   offset: number;
+//   paged: boolean;
+//   unpaged: boolean;
+// }
+
+// /**
+//  * 페이지네이션이 적용된 API 응답의 전체 구조입니다.
+//  * 제네릭 타입 <T>를 사용하여 어떤 종류의 데이터 목록이든 담을 수 있습니다.
+//  * (예: Page<User>, Page<Post>, Page<Product>)
+//  */
+// export interface UserInfoList<T> {
+//   content: T[];
+//   pageable: Pageable;
+//   last: boolean;
+//   totalElements: number;
+//   totalPages: number;
+//   size: number;
+//   number: number; // 현재 페이지 번호 (0부터 시작)
+//   sort: SortInfo;
+//   first: boolean;
+//   numberOfElements: number;
+//   empty: boolean;
+// }
+
+// 마이페이지 - 차량정보
+export interface Cars {
+    brand: string;
+    userCarId: number;
+    model: string;
+    mainModel: boolean;
+}
 
 // 마이페이지 - 충전히스토리
 // 충전히스토리 타입 선언
@@ -286,5 +362,60 @@ export interface History {
     monthlyChargeCost: number;            // 월 충전 금액
     chargingHistory: ChargingHistoryItem[]; // 충전 내역 리스트
 };
+
+// (manager) 회원정보
+/**
+ * API 응답에 포함된 개별 사용자 정보입니다. (기존과 거의 동일)
+ */
+export interface User {
+  username: string;
+  nickname: string;
+  password: string | null;
+  phoneNumber: string;
+  email: string;
+  sex: string | null;
+  zipcode: string | null;
+  role: string[];
+  roadAddr: string | null;
+  detailAddr: string | null;
+  enabled: boolean;
+  createAt: string;
+}
+
+/**
+ * HATEOAS 응답의 _links 객체에 포함된 링크 정보입니다.
+ */
+export interface Link {
+  href: string;
+}
+export interface Links {
+  first: Link;
+  self: Link;
+  next: Link;
+  last: Link;
+}
+
+/**
+ * HATEOAS 응답의 페이지 정보입니다.
+ */
+export interface PageInfo {
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  number: number; // 현재 페이지 번호 (0-indexed)
+}
+
+/**
+ * HATEOAS 페이지네이션 API 응답의 전체 구조입니다.
+ * 제네릭 <T>를 사용하여 어떤 데이터 목록이든 담을 수 있습니다.
+ */
+export interface HateoasPageResponse<T> {
+  _embedded: {
+    // 👇 API 응답의 실제 데이터 배열 키 (memberDtoList)
+    memberDtoList: T[]; 
+  };
+  _links: Links;
+  page: PageInfo;
+}
 
 

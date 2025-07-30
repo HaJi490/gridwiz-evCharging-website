@@ -1,0 +1,57 @@
+.dropdown_container {
+    position: relative;
+    /* 지도의 특정 위치에 고정 */
+    top: 10px;
+    right: 10px;
+    z-index: 10;
+    width: 150px;
+    font-family: sans-serif;
+}
+
+.dropdown_button {
+    position: relative;
+    width: 100%;
+    padding: 10px 15px;
+    background-color: white;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: left;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.arrow {
+    font-size: 10px;
+}
+
+.dropdown_list {
+    position: absolute;   /*  1. 독립적인 레이어로 만듭니다. */
+    top: 100%;            /*  2. 버튼 바로 아래에 위치시킵니다. */
+    left: 0;              /*  3. 왼쪽 정렬을 맞춥니다. */
+    width: 100%;          /*  4. 버튼과 너비를 맞춥니다. */
+    z-index: 50;          /*  5. 다른 요소들 위로 확실히 올라오도록 높은 z-index 부여 */
+
+    list-style: none;
+    margin: 5px 0 0 0;
+    padding: 0;
+    background-color: white;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.dropdown_item {
+    padding: 10px 15px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.dropdown_item:hover {
+    background-color: #f0f0f0;
+}

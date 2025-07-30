@@ -104,7 +104,7 @@ export default function StatDetail({ statDetail }: statDetailProps) {
             <hr className='border-gray-100 mb-4' />
 
             {/* 충전기 목록*/}
-            <main className='space-y-4 overflow-y-auto flex-1 min-h-0 custom-scrollbar-hide'>
+            <main className='space-y-4 overflow-y-auto flex-1 min-h-0 custom-scrollbar-hide mb-10'>
                 {chargers.map(c => {
                     // 충전기 상태정보
                     const statusInfo = statusMap[c.stat as keyof typeof statusMap] || statusMap['9'];

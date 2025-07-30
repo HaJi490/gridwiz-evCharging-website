@@ -5,6 +5,7 @@ import axios from 'axios';
 import { useAtom } from 'jotai';
 import { useRouter } from 'next/navigation';
 
+import LottieLoading from '@/components/LottieLoading';
 import Toast from '@/components/Toast/Toast';
 import ConfirmModal from '@/components/ConfirmModal/ConfirmModal';
 import Calender from '@/components/Calender/Calender';
@@ -69,11 +70,7 @@ export default function page() {
         return;
       }
       const res = await axios.get(`http://${process.env.NEXT_PUBLIC_BACKIP}:8080/reserve/getSlots`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        }
+        {headers: {Authorization: `Bearer ${token}`}}
       )
       setMyReserv(res.data);
       console.log(res.data);
@@ -154,7 +151,7 @@ export default function page() {
     setConfirmSubmsg('선택한 내용은 복구할 수 없습니다.')
   }
 
-  // 예약취소 alert - 확인
+  // 예약취소 alert - 확인🍕
   const handleCancelReserv = async () => {
     try {
       if (!token || !reserveIdsToCancel) { 
@@ -163,9 +160,10 @@ export default function page() {
       }
 
       setShowConfirmModal(false);
+      console.log(reserveIdsToCancel)
       // alert('예약을 취소하시겠습니까/')
       const res = await axios.post(`http://${process.env.NEXT_PUBLIC_BACKIP}:8080/reserve/setslotsCancel`,
-        { slotIds: reserveIdsToCancel }, 
+        { reseIds: [reserveIdsToCancel] }, 
         {
           headers: {
             Authorization: `Bearer ${token}`
@@ -175,8 +173,8 @@ export default function page() {
       if (res.status === 200) setToastMsg('예약이 취소되었습니다.');
 
     } catch (error) {
-      console.log('getMyReservation 에러: ', error)
-      setToastMsg('예약취소가 실패하였습니다. 다시 시도해주세요.')
+      console.log('handleCancelReserv 에러: ', error)
+      setToastMsg('예약취소가 실패하였습니다. 다시 시도해주세요.') 
     } finally {
       setReserveIdsToCancel(null);
       await getMyReservation();
@@ -190,6 +188,13 @@ export default function page() {
     const firstSlot = reserv.slot[0];
     if (!firstSlot) return;
 
+    console.log('타임슬롯요청: ', {
+      statId: firstSlot.charger.storeInfo.statId,
+      chgerId: firstSlot.charger.chargerId.chgerId,
+      date: firstSlot.date,
+    })
+
+
     try {
       const res = await axios.post<TimeInfo[]>(`http://${process.env.NEXT_PUBLIC_BACKIP}:8080/time/timeslots`, {
         statId: firstSlot.charger.storeInfo.statId,
@@ -197,10 +202,11 @@ export default function page() {
         date: firstSlot.date,
       });
       setAvailableTimeslots(res.data);
+      // console.log('받은타임슬롯: ', res.data);
 
       // 날짜를 비교하여 '원래 예약날짜'일 경우에만 초기 선택 상태 설정
       // const originalReservDateString = reservationToEdit ? new Date(reservationToEdit.slot[0].date).toISOString().split('T')[0] : null;
-
+      console.log("응답 : "+res.data)
       if(reserv){ // 첫번째에 정보안나오고 두번째에 정보나오는걸 해결하기위해서 - reservationToEdit (x)
         const initialSelection = reserv.slot
           .map(slot => ({
@@ -232,7 +238,7 @@ export default function page() {
     setShowEditPanel(true);
     setReservationToEdit(reservation); 
     setSelectedDate(new Date(reservation.slot[0].date)); // 패널에 표시할 날짜 설정
-    // fetchTimeslotsForEdit(reservation); 
+    fetchTimeslotsForEdit(reservation); 
   }
 
   // 4-3. 캘린더에서 날짜 변경시
@@ -328,18 +334,23 @@ export default function page() {
       setToastMsg("변경된 내용이 없습니다.");
       return;
     }
+    console.log('slotIds: ',  currentSelection.map(s => s.timeId))
+    console.log('reserveIds: ', [reservationToEdit.reserveId])
 
     try {
-      await axios.post(`http://${process.env.NEXT_PUBLIC_BACKIP}:8080/reserve/setslotsCancel`,
-        { slotIds: [reservationToEdit.reserveId] },
+      await axios.patch(`http://${process.env.NEXT_PUBLIC_BACKIP}:8080/reserve/update`,
+        { 
+          slotIds: currentSelection.map(s => s.timeId),  // 새로운 예약요청
+          reseIds: [reservationToEdit.reserveId],       // 기존 예약삭제
+        },
         { headers: { Authorization: `Bearer ${token}` } });
 
       // 새롭게 선택된 슬롯이 있다면 예약
-      if (currentSelection.length > 0) {
-        await axios.post(`http://${process.env.NEXT_PUBLIC_BACKIP}:8080/reserve/setSlots`,
-          { slotIds: currentSelection.map(s => s.timeId) },
-          { headers: { Authorization: `Bearer ${token}` } });
-      }
+      // if (currentSelection.length > 0) {
+      //   await axios.post(`http://${process.env.NEXT_PUBLIC_BACKIP}:8080/reserve/setSlots`,
+      //     { slotIds: currentSelection.map(s => s.timeId) },
+      //     { headers: { Authorization: `Bearer ${token}` } });
+      // }
       setToastMsg('예약이 성공적으로 변경되었습니다.');
       setShowEditPanel(false);
       await getMyReservation();
@@ -387,7 +398,7 @@ export default function page() {
   if (!authChecked) {
     return (
       <div className="flex justify-center items-center h-screen">
-        <p className="text-gray-500">페이지를 불러오는 중입니다...</p>
+        <LottieLoading />
       </div>
     );
   }

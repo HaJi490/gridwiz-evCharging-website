@@ -50,7 +50,7 @@ export default function ConfirmModal({ message, submsg, onConfirm, onCancel }: C
     }, [onCancel]); // 빈 배열을 전달하여 마운트될 때 한 번만 실행되도록 합니다.
 
     return (
-        <div className="fixed inset-0 bg-black/30 flex justify-center items-center z-50 animate-fadeIn"
+        <div className="fixed inset-0 bg-black/30 flex justify-center items-center z-60 animate-fadeIn"
         // onClick={(e) => {
         //     // 모달의 회색 배경을 클릭했을 때만 닫히게 하려면 이 로직을 사용합니다.
         //     if (e.target === e.currentTarget) {

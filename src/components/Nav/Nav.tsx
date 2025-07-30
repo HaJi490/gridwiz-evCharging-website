@@ -86,14 +86,14 @@ export default function Nav() {
         >
           회사소개
         </li>
-        <li className={`
+        {/* <li className={`
               ${style['menu-button']} 
               ${isTransparent 
                 ?`${style.transparent_mode} text-white hover:bg-white/20`
                 : `${path === '/dd' && 'text-[#4FA969]'} hover:bg-gray-100/50`}`}
         >
           이용안내
-        </li>
+        </li> */}
         <li onClick={()=>{route.push('/')}} 
           className={`
               ${style['menu-button']} 
@@ -110,7 +110,7 @@ export default function Nav() {
                 ?`${style.transparent_mode} text-white hover:bg-white/20`
                 : `${path === '/chg-schedule' && 'text-[#4FA969]'} hover:bg-gray-100/50`}`}
         >
-          충전스케줄링
+          나의 예약정보
         </li>
       </ul>
       {/* 우측 버튼 */}

@@ -7,6 +7,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import type { FeatureCollection, Point } from 'geojson';
 import { WeekdayDemand } from '@/types/dto';
 import Toast from '@/components/Toast/Toast';
+import LottieLoading from '@/components/LottieLoading';
 
 // import GuSelector, { busanDistricts, type District } from '../ChargingDemandLineChart/GuSelector';
 import {HeatmapFeatureCollection} from '../../../../types/geojson'
@@ -185,7 +186,7 @@ export default function DemandHeatmap({onApplyFilter, pointsDt, onSelectStat, in
   }
 
   if(!pointsDt) {
-    return <div className='w-full h-full flex justify-center items-center bg-gray-50 text-2xl font-bold text-gray-400'>지도 불러오는 중</div>
+    return <div className='w-full h-full flex justify-center items-center bg-gray-50 text-2xl font-bold text-gray-400'><LottieLoading/></div>
   }
 
   return (
@@ -216,11 +217,11 @@ export default function DemandHeatmap({onApplyFilter, pointsDt, onSelectStat, in
                 longitude={f.geometry.coordinates[0]}
                 latitude={f.geometry.coordinates[1]}
               >
-                <div className={`rounded-full cursor-pointer transition-all duration-200 hover:scale-125 
+                <div className={`rounded-full cursor-pointer transition-all duration-200 hover:scale-125 relative
                                   ${
                                     isSelected
-                                    ? 'bg-[#4FA969] ring-8 ring-[#4FA969]/20 ring-opacity-50'
-                                    : 'bg-gray-500 hover:bg-gray-600'
+                                    ? 'bg-[#4FA969] ring-8 ring-[#4FA969]/20 ring-opacity-50 z-10'
+                                    : 'bg-gray-500 hover:bg-gray-600 z-1'
                                   }
                               `}
                     style={{
@@ -250,7 +251,7 @@ export default function DemandHeatmap({onApplyFilter, pointsDt, onSelectStat, in
             className='custom-popup'
           >
             <div className='p-2 min-w-[200px]'>
-              <h3 className='font-semibold text-gray-800 text-lg mb-2'>{selectedMarker.properties.name}</h3>
+              <h3 className='font-semibold text-gray-800 mb-2'>{selectedMarker.properties.name}</h3>
               <div className='space-y-1 text-sm text-gray-600 mb-3'>
                 <p className='textlst outside'>
                   <span className='textlst title'>주소</span> 

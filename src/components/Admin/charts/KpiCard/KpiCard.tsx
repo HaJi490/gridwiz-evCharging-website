@@ -1,4 +1,5 @@
 import React from 'react'
+import { FiMinus } from "react-icons/fi";
 
 export type kpiCard = {
   title: string;
@@ -22,7 +23,7 @@ export default function KpiCard({item}: kpiCardProps) {
 
       {/* 하단 컨텐츠 */}
       <div>
-        <p className='text-5xl font-bold text-gray-800'>{item.value}</p>
+        <p className='text-5xl font-bold text-gray-800'>{ item.value != null ? item.value : '-'}</p>
         <p className='text-sm text-gray-500 mt-2'>{item.title}</p>
       </div>
         

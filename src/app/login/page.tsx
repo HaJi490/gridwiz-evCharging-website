@@ -47,6 +47,8 @@ export default function page() {
       },{
         withCredentials: true
       })
+
+      setToastMsg('로그인되었습니다.')
       const token = res.headers.authorization 
 
       const decode: TokenPayload = jwtDecode(token);
@@ -67,10 +69,11 @@ export default function page() {
 
     } catch(error: any){
       console.error("로그인 에러: ", error.response || error)
-      alert(error.response?.data?.message || "다시 로그인을 시도해주세요.")
       if (error.response && error.response.status === 401) {
-      alert("아이디 또는 비밀번호가 일치하지 않습니다.");
-    }
+        setToastMsg("아이디 또는 비밀번호가 일치하지 않습니다.");
+      } else{
+        setToastMsg(error.response?.data?.message || "다시 로그인을 시도해주세요.")
+      } 
     }
   }
 

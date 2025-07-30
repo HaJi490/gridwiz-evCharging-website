@@ -102,35 +102,44 @@ export default function signup() {
     const numberCheck = /[0-9]/.test(ePwd);
     const specialCheck = /[!@#$%^&*(),.?":{}|<>_\-\\[\]\/~`+=;]/.test(ePwd);
     
-    setPwd(ePwd);
+    // setPwd(ePwd);
 
     if (ePwd.length === 0) {
-        setIsPwdValid(null); // 입력값이 없으면 상태를 초기화
+        setIsPwdValid(false); // 입력값이 없으면 상태를 초기화
         return null;
     }
 
-    if (!lengthCheck) {
+    if (!lengthCheck || !lowerCheck || !numberCheck || !specialCheck) {
         setIsPwdValid(false);
-        // return `비밀번호는 ${MIN_PW_LENGTH}자 이상이어야 합니다.`;
+        return; // 하나라도 실패하면 false로 설정하고 함수 종료
     }
-    if (!lowerCheck) {
-        setIsPwdValid(false);
-        // return '비밀번호는 소문자를 포함해야 합니다.';
-    }
-    if (!numberCheck) {
-        setIsPwdValid(false);
-        // return '비밀번호는 숫자를 포함해야 합니다.';
-    }
-    if (!specialCheck) {
-        setIsPwdValid(false);
-        // return '비밀번호는 특수문자를 포함해야 합니다.';
-    }
+
+    // if (!lengthCheck) {
+    //     setIsPwdValid(false);
+    //     return; //`비밀번호는 ${MIN_PW_LENGTH}자 이상이어야 합니다.`;
+    // }
+    // if (!lowerCheck) {
+    //     setIsPwdValid(false);
+    //     return ; //'비밀번호는 소문자를 포함해야 합니다.';
+    // }
+    // if (!numberCheck) {
+    //     setIsPwdValid(false);
+    //     return ; //'비밀번호는 숫자를 포함해야 합니다.';
+    // }
+    // if (!specialCheck) {
+    //     setIsPwdValid(false);
+    //     // return '비밀번호는 특수문자를 포함해야 합니다.';
+    // }
 
     setIsPwdValid(true);
     return '사용 가능한 비밀번호입니다.';
     
     // return lengthCheck && upperCheck && lowerCheck && numberCheck && specialCheck
     }
+
+    useEffect(()=>{  
+        isValidPassword(pwd)
+    },[pwd]);
 
     // 비밀번호 확인
     const checkPasswordConfirm = (confirmPwd: string) => {
@@ -264,9 +273,7 @@ export default function signup() {
 
         route.push('/signup/success');
     }
-useEffect(()=>{  
-    isValidPassword(pwd)
-},[pwd]);
+
 
   return (
         <main className="w-full py-30 flex flex-col justify-center items-center px-4">

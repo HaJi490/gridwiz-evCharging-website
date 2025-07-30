@@ -25,9 +25,27 @@ export default function page() {
             </div>
         </div>
 
-        <div className='mx-[100px] my-30 grid grid-cols-12'>
+         <div className='mx-[100px] my-30 flex flex-col justify-center items-center'>
+            <h3 className='w-fit px-15 py-2 mb-15 shadow-lg border-gray-50 rounded-full text-[#4FA969] text-[19px] font-semibold'>OUR SERVICE</h3>
+            <div className='text-[19px] w-235 text-center'>
+                <p className='font-bold mb-3 text-[21px]'>
+                    지금보다 더 똑똑하고, 더 쉬운 충전
+                </p>
+                <p>
+                    저희는 사용자의 위치, 시간, 수요 데이터를 분석해 대기 없는 충전, 이동 최소화, 최적의 경로를 제공합니다.
+                    <br/>
+                    충전이 필요한 순간을 예측해 보다 여유롭고 빠르게 이용할 수 있도록 돕습니다.
+                    단순한 지도 표시를 넘어서 24시간 수요 예측과 맞춤형 예약 추천으로 누구나 쉽게, 효율적으로 충전할 수 있는 환경을 만들어갑니다.
+                </p>
+                <p className='mt-3 text-[#6b6b6b] inline-flex items-center cursor-pointer'>
+                    <span className='flex justify-center items-center hover:border-b w-fit'>더 알아보기 &ensp; <HiArrowLongRight/></span>
+                </p>
+            </div>
+        </div>
+
+        {/* <div className='mx-[100px] my-30 grid grid-cols-12'>
             <h3 className='col-span-4 text-[#4FA969] text-[29px] font-semibold'>ABOUT US</h3>
-            <p className='col-span-8 text-[19px]'>
+            <div className='col-span-8 text-[19px]'>
                 <p className='font-bold mb-3 text-[21px]'>
                     데이터와 기술로 에너지 사용의 가치를 확장합니다.
                 </p>
@@ -41,8 +59,8 @@ export default function page() {
                 지속 가능한 에너지 활용과
                 더 나은 일상의 흐름을 위해,
                 우리는 지금도 데이터를 움직이고 있습니다.
-            </p>
-        </div>
+            </div>
+        </div> */}
 
         <div className='mx-[100px] my-30 grid grid-cols-12 gap-5'>
             <div className='col-span-4 h-100 bg-gray-100 rounded-3xl'>
@@ -62,23 +80,7 @@ export default function page() {
                 </div>
             </div>
         </div>
-        <div className='mx-[100px] my-30 flex flex-col justify-center items-center'>
-            <h3 className='w-fit px-15 py-2 mb-15 shadow-lg border-gray-50 rounded-full text-[#4FA969] text-[19px] font-semibold'>OUR SERVICE</h3>
-            <p className='text-[19px] w-235 text-center'>
-                <p className='font-bold mb-3 text-[21px]'>
-                    지금보다 더 똑똑하고, 더 쉬운 충전
-                </p>
-                <p>
-                    저희는 사용자의 위치, 시간, 수요 데이터를 분석해 대기 없는 충전, 이동 최소화, 최적의 경로를 제공합니다.
-                    <br/>
-                    충전이 필요한 순간을 예측해 보다 여유롭고 빠르게 이용할 수 있도록 돕습니다.
-                    단순한 지도 표시를 넘어서 24시간 수요 예측과 맞춤형 예약 추천으로 누구나 쉽게, 효율적으로 충전할 수 있는 환경을 만들어갑니다.
-                </p>
-                <p className='mt-3 text-[#6b6b6b] inline-flex items-center cursor-pointer'>
-                    <span className='flex justify-center items-center hover:border-b w-fit'>더 알아보기 &ensp; <HiArrowLongRight/></span>
-                </p>
-            </p>
-        </div>
+       
         <footer className='h-95 pt-10 pb-20 px-[60px] bg-black grid grid-cols-12'>
             <div className='text-white gap-5 col-span-6 flex flex-col'>
                 <p>{formattedDate}&ensp;\&ensp;2025</p>

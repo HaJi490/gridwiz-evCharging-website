@@ -10,6 +10,8 @@ import Settings from '@/components/MyPage/Settings'
 // import chgerCodeNm from '@/db/chgerType.json'
 import style from './mypage.module.css'
 import { FiEdit } from "react-icons/fi";
+import { FiSettings } from "react-icons/fi";
+import { FiEdit3 } from "react-icons/fi";
 
 
 const TAB_MENU = ['충전 히스토리', '차량정보', '문의', '기본설정'];
@@ -81,50 +83,59 @@ export default function page() {
 
   return (
     <div className='mainContainer justify-center bg-[#F7F9FA]'>
-    <div className='w-7/10 max-w-[1300px] flex flex-col gap-5 pt-15'>
-        {/* 내 정보, 차량 */}
-        <div className='w-full flex gap-4 mb-5'>
-            <div className='w-full flex justify-between items-center bg-white border-[#f2f2f2] shadow-md rounded-lg px-5 py-6'>
-                <div>
-                    <p className='font-bold text-[19px]'>{firstResp.username}</p>
-                    <p className='text-[#afafaf] text-[15px]'>ID: {firstResp.userId}</p>
-                </div>
-                <button onClick={()=>route.push('/mypage/edit-member')} className='text-[20px] text-[#afafaf] bg-[#f2f2f2] p-2 rounded-full cursor-pointer'>
-                    <FiEdit />
-                </button>
-            </div>
-            <div className=' w-full bg-white border  border-[#f2f2f2] shadow-md rounded-lg px-5 py-6' >
-                {firstResp.evCars.map((ev) => (
-                    <div key={ev.model}>
-                        <p className='text-md font-semibold'>
-                            {stripBrandFromModel(ev.brand, ev.model)}
-                            {ev.mainModel && <span className='bg-[#EBFAD3] text-[#568811] text-xs rounded-full px-2 py-1 ml-2'>main</span>}
-                        </p> 
-                        <p className='text-sm text-[#6B6B6B]'>{ev.brand}</ p>
+        <div className='w-7/10 max-w-[1300px] flex flex-col gap-5 pt-15'>
+            <div className='flex gap-3 mx-5'>
+                <p className='font-bold text-[19px] ml-3'><span className='text-[#4FA969]'>{firstResp.username}</span> 님의 마이페이지</p>
+                <div className='relative group'>
+                    <button onClick={()=>route.push('/mypage/edit-member')} 
+                        className='text-gray-400 hover:text-[#4FA969] cursor-pointer hover:bg-gray-100 transition'><FiEdit3 size={20}/></button>
+                    <div className='absolute left-full top-1/2 transform -translate-y-1/2 ml-2 px-2 py-1 bg-[#666] text-white text-sm rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap'>
+                        회원정보 수정
                     </div>
-                ))}
+                </div>
             </div>
-        </div>
-        {/* 아래 */}
-        <div className='bg-white border-[#f2f2f2] shadow-md rounded-xl p-6 bg-opacity-50'>
-            {/* 마이페이지 탭메뉴 */}
-            <div className='flex gap-7 font-medium text-[15px] mb-5 border-b '>
-                {TAB_MENU.map((menu) => (
-                    <button 
-                        key={menu} 
-                        onClick={() => handleTabClick(menu)}
-                        className={`${style.filterList} ${activeTab === menu ? style.active : ''}`}>
-                        {menu}
+            {/* 내 정보, 차량 */}
+            {/* <div className='w-full flex gap-4 mb-5'>
+                <div className='w-full flex justify-between items-center bg-white border-[#f2f2f2] shadow-md rounded-lg px-5 py-6'>
+                    <div>
+                        <p className='font-bold text-[19px]'><span className='text-[#4FA969]'>{firstResp.username}</span>님의 마이페이지</p>
+                    </div>
+                    <button onClick={()=>route.push('/mypage/edit-member')} className='text-[20px] text-[#afafaf] bg-[#f2f2f2] p-2 rounded-full cursor-pointer'>
+                        <FiEdit />
                     </button>
-                ))}
+                </div>
+                <div className=' w-full bg-white border  border-[#f2f2f2] shadow-md rounded-lg px-5 py-6' >
+                    {firstResp.evCars.map((ev) => (
+                        <div key={ev.model}>
+                            <p className='text-md font-semibold'>
+                                {stripBrandFromModel(ev.brand, ev.model)}
+                                {ev.mainModel && <span className='bg-[#EBFAD3] text-[#568811] text-xs rounded-full px-2 py-1 ml-2'>main</span>}
+                            </p> 
+                            <p className='text-sm text-[#6B6B6B]'>{ev.brand}</ p>
+                        </div>
+                    ))}
+                </div>
+            </div> */}
+            {/* 아래 */}
+            <div className='bg-white border-[#f2f2f2] shadow-md rounded-xl p-6 bg-opacity-50'>
+                {/* 마이페이지 탭메뉴 */}
+                <div className='flex gap-7 font-medium text-[15px] mb-5 border-b '>
+                    {TAB_MENU.map((menu) => (
+                        <button 
+                            key={menu} 
+                            onClick={() => handleTabClick(menu)}
+                            className={`${style.filterList} ${activeTab === menu ? style.active : ''}`}>
+                            {menu}
+                        </button>
+                    ))}
+                </div>
+                {/* 탭 컨텐츠 렌더링 */}
+                <div>
+                    {renderTabContent()}
+                </div>
+                
             </div>
-            {/* 탭 컨텐츠 렌더링 */}
-            <div>
-                {renderTabContent()}
-            </div>
-            
         </div>
-    </div>
     </div>
   )
 }

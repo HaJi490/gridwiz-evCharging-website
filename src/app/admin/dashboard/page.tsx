@@ -17,6 +17,7 @@ import type { FeatureCollection, Point } from 'geojson';
 import style from './dashboard.module.css'
 import { IoCalendarClearOutline } from "react-icons/io5";
 import { FiUser } from 'react-icons/fi';
+import { FiUserMinus } from "react-icons/fi";
 import { BiSolidCar } from "react-icons/bi";
 import { PiCarSimple } from "react-icons/pi";
 import { FiBell } from "react-icons/fi";
@@ -111,11 +112,11 @@ const KPI_DEFINITIONS = [
         // value: 230,
         Icon: <FiUser size={38} />,
     },
-    // {
-    //     title: 'Withdraw Users',
-    //     value: 230,
-    //     Icon: <BiSolidCar size={38} />,
-    // },
+    {
+        title: 'Withdraw Users',
+        // value: 230,
+        Icon: <FiUserMinus size={38} />,
+    },
 ];
 
 // 메인
@@ -172,8 +173,12 @@ export default function page() {
 
     // 1. 히트맵 데이터 요청(초기값 필요)
     const getHeatmapData = useCallback(async () => {
-        console.log('[Dashboard] 1. 히트맵 정보요청')
-        console.log(new Date());
+        // 함수 초입에서 토큰 존재 여부 확인
+        if (!token) {
+            console.log('[Dashboard] 히트맵 정보 요청 중단: 토큰 없음');
+            return;
+        }
+        console.log('[Dashboard] 1. 히트맵 정보요청');
 
 
         // 시간 포맷팅
@@ -181,17 +186,6 @@ export default function page() {
         requestDate.setHours(currentFilter.time, 0, 0, 0);
         console.log('포맷팅한 시간: ', requestDate);
 
-        // // 한국 시간 기준 값 추출
-        // const year = requestDate.getFullYear();
-        // const month = String(requestDate.getMonth() + 1).padStart(2, '0');
-        // const day = String(requestDate.getDate()).padStart(2, '0');
-        // const hour = String(requestDate.getHours()).padStart(2, '0');
-        // const minute = String(requestDate.getMinutes()).padStart(2, '0');
-        // const second = String(requestDate.getSeconds()).padStart(2, '0');
-
-        // // Z 없는 ISO 포맷 문자열
-        // const kstISOString = `${year}-${month}-${day}T${hour}:${minute}:${second}.000`;
-        
         const requestBody = {
             local: currentFilter.region,
             time: requestDate.toISOString(),   //'2025-07-26T06:00:00.000Z'
@@ -203,7 +197,7 @@ export default function page() {
         try {
             const res = await axios.post<ActualChargingStationData[]>(`http://${process.env.NEXT_PUBLIC_BACKIP}:8080/pred/location`,
                 requestBody,
-                // { headers: { Authorization: `Bearer ${token}` }}
+                { headers: { Authorization: `Bearer ${token}` }}
             )
             
             setHeatmapDt(res.data); //🍕 res.data로 변경
@@ -211,16 +205,21 @@ export default function page() {
         } catch (error) {
             console.error('getHeatmapData 에러: ', error)
         }
-    }, [currentFilter])
+    }, [currentFilter, token])
 
     // 2. 충전기상태 데이터 요청
     const getTotalStatDt = useCallback(async () => {
+        if (!token) {
+            console.log('[Dashboard] 충전소 상태 요청 중단: 토큰 없음');
+            return;
+        }
+
         console.log('[Dashboard] 2. 충전소 상태요청: ', currentFilter.region);
 
         try {
             const res = await axios.get<ChargerTotalStatusData>(
                 `http://${process.env.NEXT_PUBLIC_BACKIP}:8080/static/idle?local=${currentFilter.region}`,
-
+                { headers: { Authorization: `Bearer ${token}` }}
             )
             setTotalStatDt(res.data);
             console.log(res.data);
@@ -228,18 +227,19 @@ export default function page() {
         } catch (error) {
             console.error('getStatDt 에러: ', error);
         }
-    }, [currentFilter])
+    }, [currentFilter, token])
 
 
     // 히트맵 데이터 로드
     useEffect(() => {
         getHeatmapData();
-    }, [currentFilter, getHeatmapData])
+    }, [currentFilter, getHeatmapData, token])
 
     // 지역 충전소 상태데이터 로드
     useEffect(() => {
+  
         getTotalStatDt();
-    }, [currentFilter.region, getTotalStatDt])
+    }, [currentFilter.region, getTotalStatDt, token])
 
 
     // 필터 적용
@@ -359,24 +359,31 @@ export default function page() {
 
     // 3. 하단 정보가져오기
     const getTotalInfo = async() => {
+        if(!token) {
+            console.log('토큰 없음');
+            return ;
+        }
+
+        console.log('(하단정보) 토큰있음: ', token)
+
         try{
-            const [reservRes, carRes, userAllRes] = await Promise.all([
+            const [reservRes, carRes, userAllRes, userDisabled] = await Promise.all([
                 // 전체예약
                 axios.get<number>(`http://${process.env.NEXT_PUBLIC_BACKIP}:8080/static/reserveTotal`,
-                    // { headers: { Authorization: `Bearer ${token}` } }
+                    { headers: { Authorization: `Bearer ${token}` } }
                 ),
                 // 전체 차량
                 axios.get<number>(`http://${process.env.NEXT_PUBLIC_BACKIP}:8080/static/carTotal`,
-                    // { headers: { Authorization: `Bearer ${token}` } }
+                    { headers: { Authorization: `Bearer ${token}` } }
                 ),
                 // 전체 회원
                 axios.get<number>(`http://${process.env.NEXT_PUBLIC_BACKIP}:8080/static/userTotal`,
-                    // { headers: { Authorization: `Bearer ${token}` } }
+                    { headers: { Authorization: `Bearer ${token}` } }
                 ),
-                // // 탈퇴 회원
-                // axios.get<number>(`http://${process.env.NEXT_PUBLIC_BACKIP}:8080/static/reservTotal`,
-                //     { headers: { Authorization: `Bearer ${token}` } }
-                // ),
+                // 탈퇴 회원
+                axios.get<number>(`http://${process.env.NEXT_PUBLIC_BACKIP}:8080/static/userDisableTotal`,
+                    { headers: { Authorization: `Bearer ${token}` } }
+                ),
             ]);
 
             setTotalInfo({
@@ -391,7 +398,7 @@ export default function page() {
 
     useEffect(()=>{
         getTotalInfo();
-    },[])
+    },[token])
 
     // 3-2. 하단정보 가공
     const kpiData = useMemo(()=>{
@@ -416,7 +423,11 @@ export default function page() {
 
 
     // 4. 라인그래프(충전소) 데이터
-    const getStatGraphData = async (statId: string) => {
+    const getStatGraphData = useCallback(async (statId: string) => {
+        if(!token) {
+            console.log('토큰 없음');
+            return ;
+        }
         setIsLoadingStationDetail(true);
 
         try {
@@ -447,12 +458,12 @@ export default function page() {
         } finally {
             setIsLoadingStationDetail(false);
         }
-    }
+    }, [token]);
 
     return (
         <div className="bg-gray-50 min-h-screen p-8 font-sans">
             {/* 헤더 */}
-            <header className='flex justify-between items-center mb-8'>
+            <header className='flex justify-between items-center mb-8 mx-5'>
                 <h1 className='text-4xl font bold  text-gray-800'>Dashboard</h1>
                 <button className='relative p-2 rounded-full cursor-pointer hover:bg-gray-200'>
                     <FiBell size={20} />
@@ -463,6 +474,7 @@ export default function page() {
             <div className={style.dashboard_grid}>
                 {/* 실시간 충전소 상태 */}
                 <div className={`${style.card} lg:col-span-3 md:col-span-6 p-10 flex flex-col`}>
+                    
                     <h2><span className='border-b '>{currentFilter.region}</span> 실시간 상태</h2>
                     <div className='w-full flex h-2 rounded-full overflow-hidden mb-10'>
                         <StatusBarChart data={statStatus?.stat} />
@@ -485,7 +497,7 @@ export default function page() {
                                 <span className='font-semibold text-gray-800'>{item.cnt} 대</span>
                                 {item.status === '상태이상' && item.details && (
                                     <div
-                                        className="absolute top-full left-1/2 mr-5 -translate-y-1/2 ml-4
+                                        className="absolute bottom-2/3 left-1/2 mr-5 -translate-y-1/2 ml-4
                                                     w-max p-3 bg-gray-800 text-white text-xs rounded-md shadow-lg 
                                                     opacity-0 invisible group-hover:opacity-100 group-hover:visible 
                                                     transition-all duration-300 z-10"
@@ -519,9 +531,18 @@ export default function page() {
                         {/* 충전소 수요그래프 */}
                         <div className={`${style.card} p-[30px] lg:col-span-8 md:col-span-6 `}>
                             <div className='flex justify-between items-center mb-3'>
-                                <h2><span className='font-mono border-b'>{statGraphDt[0].stationLocation}:{statDetailDt.statNm}</span> &nbsp; 수요예측 </h2>
+                                <h3 className='text-lg font-medium overflow-hidden'>
+                                    <span className='font-mono border-b'>
+                                        {statGraphDt[0].stationLocation}:{statDetailDt.statNm}
+                                    </span> 
+                                    &nbsp; 수요예측 
+                                </h3>
                                 <div className='flex gap-2'>
-                                    {periods.map(period => (
+                                    <button className='px-2 text-sm rounded-full transition-colors duration-200 bg-[#4FA969]/20 text-[#4FA969] '>
+                                        week
+                                    </button>
+                                    
+                                    {/* {periods.map(period => (
                                         <button
                                             key={period}
                                             onClick={() => setSelectedPeriod(period)}
@@ -534,7 +555,7 @@ export default function page() {
                                         >
                                             {period}
                                         </button>
-                                    ))}
+                                    ))} */}
                                 </div>
                             </div>
 
