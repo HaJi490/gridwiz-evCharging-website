@@ -10,7 +10,7 @@ import SidebarItem from './SidebarItem';
 import { 
     LuLayoutDashboard, LuFileText
 } from "react-icons/lu";
-import { FiUser, FiSettings, FiCalendar, FiLogOut, FiChevronLeft, FiChevronRight } from "react-icons/fi";
+import { FiUser, FiSettings, FiCalendar, FiLogOut, FiHelpCircle , FiChevronLeft, FiChevronRight } from "react-icons/fi";
 
 
 // 메뉴 아이템 데이터구조
@@ -21,20 +21,20 @@ const navItems = [
         path:'/admin/dashboard',
     },
     {
-        name: 'Inquiry',
-        icon: <FiCalendar size={20}/>,
-        path: '/admin/manageInquiry'
-    },
-    {
         name: 'Customers',
         icon: <FiUser size={20}/>,
         path: '/admin/manageMem'
     },
     {
-        name: 'Setting',
-        icon: <FiSettings size={20}/>,
-        path: '/admin/setting'
-    }
+        name: 'Inquiry',
+        icon: <FiHelpCircle size={20}/>,
+        path: '/admin/manageInquiry'
+    },
+    // {
+    //     name: 'Setting',
+    //     icon: <FiSettings size={20}/>,
+    //     path: '/admin/setting'
+    // }
 ]
 
 // Context를 사용하여 상태 공유 - props없이 바로 전달가능

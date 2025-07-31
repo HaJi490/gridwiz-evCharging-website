@@ -91,6 +91,9 @@ export default function page() {
         }
     }
 
+    // 회원수정
+    
+
     return (
         <div className='mainContainer justify-center'>
             <div className='w-7/10 max-w-[1100px] pt-15 '>
@@ -165,7 +168,7 @@ export default function page() {
                     회원 탈퇴하기 
                 </button>
                 <div className="flex gap-5 justify-center">
-                    <button className={'btn cancel cursor-pointer'}>취소</button>
+                    <button onClick={()=>route.back()} className={'btn cancel cursor-pointer'}>취소</button>
                     <button className={'btn confirm cursor-pointer'}>수정</button>
                 </div>
             </div>

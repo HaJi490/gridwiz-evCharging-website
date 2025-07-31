@@ -56,7 +56,7 @@ export default function DemandHeatmap({onApplyFilter, pointsDt, onSelectStat, in
     latitude: busanDistricts[0].latitude,
     zoom: busanDistricts[0].zoom,
   });
-  const [showMarker, setShowMarker] = useState<boolean>(true);
+  const [showMarker, setShowMarker] = useState<boolean>(false);
   const [selectedMarker, setSelectedMarker] = useState(null);
 
   const [showFilter, setShowFilter] = useState<boolean>(false);

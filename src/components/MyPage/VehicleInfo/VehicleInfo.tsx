@@ -117,8 +117,9 @@ export default function VehicleInfo() {
         show: false,
     });
 
+    console.log(token);
     try{
-      await axios.delete(`http://${process.env.NEXT_PUBLIC_BACKIP}:8080/user/car/delete?userCarID=${carToDelete}`,
+      await axios.delete(`http://${process.env.NEXT_PUBLIC_BACKIP}:8080/user/car/delete?userCarId=${carToDelete}`,
         {headers: {Authorization: `Bearer ${token}`}}
       )
       setToastMsg('차량을 삭제하였습니다.');

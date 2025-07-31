@@ -4,12 +4,19 @@ import React, { useCallback, useEffect, useState } from 'react'
 import { Map, MapMarker, useKakaoLoader, CustomOverlayMap, Circle, MarkerClusterer } from 'react-kakao-maps-sdk'
 import Image from 'next/image';
 
+import { formatToKm } from '@/utils/fomatToKm';
+import { formatTime } from '@/utils/formatTime';
 import { ChargingStationResponseDto } from '@/types/dto';
 import TimeFilter from '../Admin/filters/TimeFilter';
 import LottieLoading from '../LottieLoading';
 import { IoRefreshOutline } from "react-icons/io5";
 import { BsExclamation } from "react-icons/bs";
+import { IoBatteryDeadOutline, IoBatteryFull  } from "react-icons/io5";
+import { AiFillStar } from "react-icons/ai";
+import { AiOutlineStar } from "react-icons/ai";
+import { LuDot } from "react-icons/lu";
 import { tree } from 'next/dist/build/templates/app-page';
+import { TbCurrentLocation, TbCurrentLocationOff } from "react-icons/tb";
 
 
 interface ChargingMapProps {
@@ -23,8 +30,9 @@ interface ChargingMapProps {
     onHoursChange: React.Dispatch<React.SetStateAction<number>>; // setter 타입
     onMarkerClick: (markerId: string) => void;
     selectionSource : 'list' | 'map' | null;
-    shortestDistance?: ChargingStationResponseDto,
-    shortestTime?: ChargingStationResponseDto,
+    shortest: ChargingStationResponseDto[],
+    isLongCharging: boolean,
+    onLongChargingChange: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 type MarkerType = {
@@ -76,8 +84,9 @@ export default function ChargingMap({
     onHoursChange,
     onMarkerClick,
     selectionSource,
-    shortestDistance,
-    shortestTime
+    shortest,
+    isLongCharging,
+    onLongChargingChange
 }: ChargingMapProps) {
     const [map, setMap] = useState<kakao.maps.Map>(null); // 지도인스턴스 저장
     const [infoWindow, setInfoWindow] = useState<InfoWindowState>(null);
@@ -85,7 +94,10 @@ export default function ChargingMap({
     
     const [isMapMoved, setIsMapMoved] = useState(false);
     const [showPredictBtn, setShowPredictBtn] = useState<boolean>(false);
+
     const [showRecommend, setShowRecommend] = useState<boolean>(true);
+    const [showRadius, setShowRadius] = useState<boolean>(true);
+   
 
     const MIN_CLUSTER_LEVEL = 6; // 클러스터링 최소레벨
 
@@ -169,6 +181,12 @@ export default function ChargingMap({
         }
     }
 
+    // 6. 추천stat 선택핸들러(지도->리스트)
+    const handleSelectRecommend = (stat:ChargingStationResponseDto )=> {
+        console.log('[ChargingMap] 6. 추천충전소 클릭시')
+        onMarkerClick(stat.statId); // 부모에 마커클릭알림
+    }
+
     // 로딩중일때 보여줄 화면
     if (loading) {
         return <div className='w-full h-full flex justify-center items-center bg-gray-50'><LottieLoading /></div>
@@ -206,7 +224,7 @@ export default function ChargingMap({
                 onDragStart={() => setIsMapMoved(true)} // 사용자가 드래그하면
             >
                 {/* 내 위치기반 반경 */}
-                {myPos && (
+                {myPos && showRadius && (
                     <Circle center={{ lat: myPos[0], lng: myPos[1] }}
                         radius={radius}
                         strokeWeight={2}
@@ -380,43 +398,84 @@ export default function ChargingMap({
 
             {/* 추천 충전소 */}
             <div className='absolute top-5 right-5 z-10'>
-                <div className='relative group/icon'>
+                <div className='relative group/icon flex flex-col justify-center items-center gap-3'>
+                <button 
+                    onClick={()=>setShowRadius(!showRadius)}
+                    title={showRadius ? "반경 끄기" : "반경 켜기"}  //툴팁
+                    className={`p-2 mr-1 border-2  text-[#4FA969] ${showRecommend ? 'bg-[#cdf7d9] border-[#a0e4b4]':'bg-white border-gray-50' } rounded-full 
+                            z-10 cursor-pointer shadow-lg hover:bg-gray-100 hover:border-gray-100 transition-colors`}
+                >
+                    {
+                        showRadius 
+                        ? <TbCurrentLocationOff   size={20} />
+                        :<TbCurrentLocation   size={20} />
+                    }
+                </button>
+                {shortest &&
+                    <>
                     <button 
-                            onClick={()=>setShowRecommend(!showRecommend)}
-                            className='p-1 mr-1 border-2 border-white text-white bg-[#4FA969] rounded-full 
-                                    z-10 cursor-pointer shadow-lg hover:bg-green-700 transition-colors'
+                        onClick={()=>setShowRecommend(!showRecommend)}
+                        className={`p-2 mr-1 border-2  text-[#4FA969] ${showRecommend ? 'bg-[#cdf7d9] border-[#a0e4b4]':'bg-white border-gray-50' } rounded-full 
+                                z-10 cursor-pointer shadow-lg hover:bg-gray-100 hover:border-gray-100 transition-colors`}
                     >
-                        <BsExclamation size={20}/>
+                        {
+                            showRecommend 
+                            ? <AiFillStar  size={20} />
+                            :<AiOutlineStar  size={20} />
+                        }
                     </button>
                     {showRecommend &&
-                        <div className="absolute top-[70px] -translate-y-1/2 right-full mr-2
+                        <div className="absolute top-[90px] -translate-y-1/2 right-full mr-2
                             p-3 bg-white  text-black shadow-lg  rounded-lg 
-                            transition-all whitespace-nowrap flex flex-col">
-                            <button className='px-3 py-2 text-left'>
-                                <p className='font-bold text-sm text-[#4FA969]'>최단거리 추천</p>
-                                <p className='text-xs font-bold'>충전소이름</p>
-                                <p className='text-xs'>주소</p>
-
+                            transition-all whitespace-nowrap flex flex-col ">
+                            <button 
+                                onClick={() =>handleSelectRecommend(shortest[0])}
+                                className='pl-3 pr-10 py-2 flex flex-col gap-1 items-start hover:bg-gray-100 rounded-lg cursor-pointer '>
+                                <p className='text-xs font-bold flex items-center text-[#4FA969] rounded-full '>
+                                    최단경로 
+                                    <span className='text-[#4FA969]/40'><LuDot/></span>
+                                    {formatToKm(shortest[0].leastDis)}
+                                </p>
+                                <p className=' font-bold'>{shortest[0].statNm}</p>
                             </button>
-                            <button>
-                                <p className='font-bold text-[#4FA969]'>최소시간 추천</p>
+                            <div className='border-[#f2f2f2] border-b my-2'/>
+                            <button onClick={() =>handleSelectRecommend(shortest[1])}
+                                    className='pl-3 pr-10 py-2 flex flex-col gap-1 items-start hover:bg-gray-100 rounded-lg cursor-pointer '>
+                                <p className='text-xs font-bold flex items-center text-[#4FA969] rounded-full'>
+                                    최소시간 
+                                    <span className='text-[#4FA969]/40'><LuDot/></span>
+                                    {formatTime(shortest[1].leashTime)}
+                                </p>
+                                <p className=' font-bold'>{shortest[1].statNm}</p>
                             </button>
+                            
                         </div>
                     }
+
+                    {predictHours > 0 &&
+                            <button onClick={()=>onLongChargingChange(!isLongCharging)}
+                            className={`p-2 mr-1 border-2  text-[#4FA969] ${isLongCharging ? 'bg-[#cdf7d9] border-[#a0e4b4]':'bg-white border-gray-50' } rounded-full 
+                                z-10 cursor-pointer shadow-lg hover:bg-gray-100 hover:border-gray-100 transition-colors`}
+                        >
+                            {isLongCharging ? <IoBatteryFull/>: <IoBatteryDeadOutline/>}
+                        </button>
+                    }
+                        </>
+                }
                 </div>
             </div>
             
             <div className='absolute bottom-5 right-5 z-10 flex flex-col items-end gap-2'>
                 <div className='relative group/icon'>
-                    <div className='p-1 mr-1 border-2 border-white text-white bg-[#4FA969] rounded-full 
+                    <div className='p-1 mr-1 border-2 border-none text-white bg-[#4FA969] rounded-full 
                                     z-10 cursor-pointer shadow-lg hover:bg-green-700 transition-colors'
                     >
-                        <BsExclamation size={20}/>
+                        <BsExclamation />
                     </div>
-                    <div className="absolute top-[-35px] -translate-y-1/2 right-full mr-2
+                    <div className="absolute top-[-45px] -translate-y-1/2 right-full mr-2
                         p-5 bg-black/70 text-white text-sm rounded-lg 
                         opacity-0 invisible group-hover/icon:opacity-100 group-hover/icon:visible transition-all whitespace-nowrap">
-                        <p className='mb-3 font-bold'>시간을 조정하여 최적의 충전소를 추천해드립니다.</p>
+                        <p className='mb-3 font-bold'>시간을 조정하여 해당시간대의 최적의 충전소를 추천해드립니다.</p>
                         <div className='grid grid-cols-2 gap-4'>
                             <div className='flex items-center gap-2'>
                                 <img src='/recommend_1.png' alt='10분이내' width={30} height={30} className='flex-shrink-0'/>

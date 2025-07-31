@@ -37,11 +37,11 @@ export default function RootLayout({
             type="text/javascript"
             src={`https://dapi.kakao.com/v2/maps/sdk.js?appkey=${process.env.NEXT_PUBLIC_KAKAO_JSKEY}&autoload=false&libraries=services,clusterer`}
           ></script>
-          <Script
+          {/* <Script
           id="daum-postcode-script"
           src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"
           strategy="lazyOnload"
-          />
+          /> */}
           {}
           <div className="fixed top-0 left-0 w-full z-50">
             <ConditionalNav/>

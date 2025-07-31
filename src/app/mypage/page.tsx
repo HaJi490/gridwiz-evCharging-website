@@ -1,7 +1,11 @@
 'use client'
 
-import React, {useState, useRef } from 'react'
+import React, {useState, useEffect } from 'react';
+import axios from 'axios'
+import { useAtom } from 'jotai';
+import { accessTokenAtom } from '@/store/auth';
 import { useRouter } from 'next/navigation'
+import { User } from '@/types/dto';
 
 import ChargingHistory from '@/components/MyPage/ChargingHistory/ChargingHistory'
 import VehicleInfo from '@/components/MyPage/VehicleInfo/VehicleInfo'
@@ -14,25 +18,39 @@ import { FiSettings } from "react-icons/fi";
 import { FiEdit3 } from "react-icons/fi";
 
 
-const TAB_MENU = ['충전 히스토리', '차량정보', '문의', '기본설정'];
+const TAB_MENU = [ '차량정보']; //'충전 히스토리', , '문의', '기본설정'
 
 export default function page() {
+    const [token] = useAtom(accessTokenAtom);
     const route = useRouter();
-    const [activeTab, setActiveTab] = useState<string>('충전 히스토리');
+    const [activeTab, setActiveTab] = useState<string>('차량정보');
+    const [memberDt, setMemberDt] = useState<User>();
     
-    const firstResp = {
-        username: '홍길동',
-        userId: 'member1',
-        // 차량
-        evCars:[
-            {
-                brand: '테슬라',
-                model: '테슬라 테슬라_모델S',
-                mainModel: true,    // 대표차량
+    useEffect(()=>{
+        const getMemberInfo = async () => {
+            console.log(token)
+            if (!token) {
+                console.warn('토큰 없음');
+                return;
             }
-        ],
-        
-    }
+
+            try {
+                const res = await axios.get(`http://${process.env.NEXT_PUBLIC_BACKIP}:8080/user/info`, 
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}` 
+                        }
+                    }
+                )
+                setMemberDt(res.data);
+                console.log(res.data);
+            } catch (error) {
+                console.error('getMemberInfo: ', error)
+            }
+        }
+        getMemberInfo();
+
+    }, [token])
 
     const stripBrandFromModel = (brand: string, model: string) => {
         if(!brand) return model.trim();
@@ -68,16 +86,16 @@ export default function page() {
     // activeTab에 따라 렌더링할 컴포넌트 결정
     const renderTabContent = () => {
         switch(activeTab) {
-            case '충전 히스토리':
-                return <ChargingHistory/>;
+            // case '충전 히스토리':
+            //     return <ChargingHistory/>;
             case '차량정보':
                 return <VehicleInfo/>;
-            case '문의':
-                return <QnA />;
-            case '기본설정':
-                return <Settings/>
+            // case '문의':
+            //     return <QnA />;
+            // case '기본설정':
+            //     return <Settings/>
             default:
-                return <ChargingHistory/>
+                return <VehicleInfo/>
         }
     }
 
@@ -85,7 +103,7 @@ export default function page() {
     <div className='mainContainer justify-center bg-[#F7F9FA]'>
         <div className='w-7/10 max-w-[1300px] flex flex-col gap-5 pt-15'>
             <div className='flex gap-3 mx-5'>
-                <p className='font-bold text-[19px] ml-3'><span className='text-[#4FA969]'>{firstResp.username}</span> 님의 마이페이지</p>
+                <p className='font-bold text-[19px] ml-3'><span className='text-[#4FA969]'>{memberDt?.username}</span> 님의 마이페이지</p>
                 <div className='relative group'>
                     <button onClick={()=>route.push('/mypage/edit-member')} 
                         className='text-gray-400 hover:text-[#4FA969] cursor-pointer hover:bg-gray-100 transition'><FiEdit3 size={20}/></button>

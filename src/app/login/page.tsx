@@ -82,14 +82,14 @@ export default function page() {
   return (
     <div className="min-h-screen flex flex-col">
       <Toast message={toastMsg} setMessage={setToastMsg}/>
-        <span className="text-[12px] text-[#afafaf] flex"><IoMdHome />&nbsp;{'>'} 로그인</span>
+        {/* <span className="text-[12px] text-[#afafaf] flex"><IoMdHome />&nbsp;{'>'} 로그인</span> */}
         <main className='w-screen flex-grow flex flex-col justify-center items-center bg-white px-4 pb-[30px]'>
           {/* <span className="text-red-500">OR에 border 안생김(크기조정하면 있긴함)</span> */}
           <form className="w-5/10 max-w-[400px] sm:w-96 px-6" onSubmit={e =>  login(e)}>
             <h2 className='text-center font-medium text-[28px] tracking-wide mb-6'>로그인</h2>
             {/* <div className='grid gap-3 justify-center mb-3'> */}
               <div className="mb-4">
-                <label className='block text-[12px] text-[#afafaf] mb-1'>Email</label>
+                <label className='block text-[12px] text-[#afafaf] mb-1'>ID</label>
                 <input type='text' value={id} onChange={e=> setId(e.target.value.trim())} required
                       className='w-full px-4 py-3 border border-[#afafaf] focus:ouline-none focus:outline-[#4FA969]'/>
               </div>
@@ -106,13 +106,11 @@ export default function page() {
               {/* <span>비밀번호찾기</span> */}
           </div>
           <div className="flex justify-center my-4">
-            <hr className="flex-grow border-t border-[#666]"/>
-            <span className="text-[12px] text-[#666]">OR</span>
-            <hr className="flex-grow border-t border-[#666]"/>
+            
           </div>
           <div className="flex justify-center gap-6">
             <Link href= {`${process.env.NEXT_PUBLIC_OAUTH2}/oauth2/authorization/google`} >
-              <Image className="cursor-pointer " src="/Group 11.png" alt='gw11로고' width={40} height={40} priority/>
+              <Image className="cursor-pointer " src="/Group 57 (1).png" alt='gw57로고' width={40} height={40} priority/>
             </Link>
             <Link href= {`${process.env.NEXT_PUBLIC_OAUTH2}/oauth2/authorization/naver`} >
               <Image className="cursor-pointer " src="/Group 11.png" alt='gw12로고' width={40} height={40} priority/>

@@ -7,6 +7,7 @@ import { useAtom } from "jotai";
 import { accessTokenAtom } from '@/store/auth';
 import { useRouter } from "next/navigation";
 
+import LottieLoading from "@/components/LottieLoading";
 import ChargingMap from "@/components/Home/ChargingMap";
 import StationListPanel from "@/components/Home/StationListPanel/StationListPanel";
 import ConfirmModal from "@/components/ConfirmModal/ConfirmModal";
@@ -64,8 +65,11 @@ export default function Home() {
   const [predictionHours, setPredictionHours] = useState<number>(0);             // 몇시간 후 예측인지
   const [predictChgerDt, setPredictChgerDt] = useState<ChargingStationPredictionResponseDto[] | null >(null);
   const [recommendedChgerDt, setRecommendedChgerDt] = useState<RecommendedStationDto[] | null>(null);
-  const [shortestDistance, setShortestDistance] = useState<ChargingStationResponseDto[] | null>(null);
-  const [shortestTime, setShortestTime] = useState<ChargingStationResponseDto[] | null>(null);
+  
+  const [shortest, setShortest] = useState<ChargingStationResponseDto[] | null>(null);
+  const [isLongCharging, setIsLongCharging] = useState<boolean>(false); // 장기충전가능
+  const [isLongChargingDt, setIsLongChargingDt] = useState<ChargingStationResponseDto[] | null>(null);
+
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const [token] = useAtom(accessTokenAtom) ;
@@ -116,20 +120,21 @@ export default function Home() {
       const res = await axios.post<ChargingStationResponseDto[]>(
         `http://${process.env.NEXT_PUBLIC_BACKIP}:8080/map/post/stations`,
         requestBody,
-        { signal: controller.signal } 
+        // { signal } 
       );
       const data = Array.isArray(res.data) ? res.data : [];
+      console.log(data);
       return data;
       // return statResp;  //🍕 위에주석풀기
     } catch (err) {
-      if (axios.isCancel(err)) return;            // “정상 취소”는 무시
+      if (axios.isCancel(err)) return [];            // “정상 취소”는 무시
       console.error("fetchStations error: ", err);
       return [];
     }
   }, []); 
 
   // 최단거리, 최소시간 요청
-  const fetchShortest = useCallback(async(filtersToApply: Filters)=>{
+  const fetchShortest = useCallback(async(filtersToApply: Filters)=>{ //, signal: AbortSignal
     console.log('[Home] 13. 최단최소 정보요청')
     ongoing.current?.abort();                   // 직전 요청 취소
     const controller = new AbortController();   // 새 컨트롤러
@@ -158,26 +163,19 @@ export default function Home() {
 
     console.log("API 최단요청 보낼 필터:", requestBody);
     try {
-      const [getShortestDistance, getShortestTime] = await Promise.all([
-        axios.post<ChargingStationResponseDto[]>(
+      const res =
+        await axios.post<ChargingStationResponseDto[]>(
           `http://${process.env.NEXT_PUBLIC_BACKIP}:8080/map/get/near`,
           requestBody,
-          { signal: controller.signal } 
-        ),
-        axios.post<ChargingStationResponseDto[]>(
-          `http://${process.env.NEXT_PUBLIC_BACKIP}:8080/map/get/near`,
-          requestBody,
-          { signal: controller.signal } 
+          // { signal} 
         )
-      ])
 
-      setShortestDistance(getShortestDistance);
-      
-
-      // return statResp;  //🍕 위에주석풀기
+      const data = Array.isArray(res.data) ? res.data : [];
+      console.log(data);
+      return data;
     } catch (err) {
       if (axios.isCancel(err)) return;            // “정상 취소”는 무시
-      console.error("fetchStations error: ", err);
+      console.error("fetchShortest 에러: ", err);
       return [];
     }
   },[])
@@ -339,15 +337,15 @@ export default function Home() {
     }
   },[]);
 
-  // 11. 충전소 추천 정보요청
+  // 11. 충전소 추천 정보요청(장기충전 선택x, 예측)
   const fetchStationRecommended = useCallback(async(filtersToApply: Filters, nHours:number) => {
     console.log('[Home] 11. 충전소 추천 정보요청');
 
     // 시간 포맷팅
-        const requestDate = new Date();
-        requestDate.setHours(nHours, 0, 0, 0);
-        console.log('포맷팅한 시간: ', requestDate);
-        console.log('최종요청 시간: ', requestDate);
+    const requestDate = new Date();
+    requestDate.setHours(nHours, 0, 0, 0);
+    console.log('포맷팅한 시간: ', requestDate);
+    console.log('최종요청 시간: ', requestDate);
     
     // const requestBody = {
     //   "coorDinatesDto" : {
@@ -371,6 +369,51 @@ export default function Home() {
         // {headers: { Authorization: `Bearer ${token}`}}
       );
       const data = Array.isArray(res.data) ? res.data : [];
+      return data;
+    } catch(err){
+      if(axios.isCancel(err)) return;
+      console.error('fetchStationRecommended 오류: ', err);
+      return null;
+    }
+  },[])
+
+  // 14. 장기충전요청, 예측
+  const fetchLongCharging = useCallback(async(filtersToApply: Filters, nHours:number)=>{
+    console.log('[Home] 14. 장기충전가능 요청');
+
+    const requestDate = new Date();
+    requestDate.setHours(nHours, 0, 0, 0);
+    console.log('포맷팅한 시간: ', requestDate);
+    console.log('최종요청 시간: ', requestDate);
+
+    const requestBody: ChargingStationPredictionRequestDto = {
+      "coorDinatesDto" : {
+        lat: filtersToApply.lat,
+        lon: filtersToApply.lon,
+        radius: filtersToApply.radius,
+      },
+      "mapQueryDto":{
+        useMap: true,
+        canUse: filtersToApply.canUse,
+        parkingFree: filtersToApply.parkingFree,
+        limitYn: filtersToApply.limitYn,
+        chgerType: filtersToApply.chargerTypes.length > 0 ? filtersToApply.chargerTypes : [], // 빈 배열일 때 undefined로 보내는 등 백엔드에 맞게 조정
+        busiId: filtersToApply.chargerComps.length > 0 ? CompNmToIds(filtersToApply.chargerComps) : [],
+        outputMin: filtersToApply.outputMin,
+        outputMax: filtersToApply.outputMax,
+        keyWord: filtersToApply.keyWord
+      },
+      time: "2025-07-23T00:31:45.380Z" // kdt, utc 물어보기
+    };
+
+    console.log('장기충전요청 필터: ', requestBody);
+    try{
+      const res = await axios.post<ChargingStationResponseDto[]>(
+        `http://${process.env.NEXT_PUBLIC_BACKIP}:8080/map/get/longUse`,
+        requestBody,
+      )
+      const data = Array.isArray(res.data) ? res.data : [];
+      console.log(data);
       return data;
     } catch(err){
       if(axios.isCancel(err)) return;
@@ -482,45 +525,78 @@ export default function Home() {
       console.log(`[Home] 4. ${viewMode} 충전소정보 재요청`);
       setIsLoading(true); // 로딩시작
 
+      // AbortController를 여기서 생성
+      // ongoing.current?.abort();
+      // const controller = new AbortController();
+      // ongoing.current = controller;
+      
       const filtersToRequest = {
           ...currentFilter,
           lat: myPos[0], // 위치 정보는 항상 myPos에서 가져옵니다 (Single Source of Truth)
           lon: myPos[1],
       };
       try{
+        // const currentResult = await fetchStations(filtersToRequest);
+        //     console.log('✅ 테스트 결과:', currentResult); // 결과가 잘 오는지 확인
+
+        //     setChgerData(currentResult || []); // 항상 배열이 되도록 보장
         if (viewMode === 'prediction'){
-          // 현재, 예측 동시에🥕🥕
-          const [currentResult, recommendedResult] = await Promise.all([ //Promise.all**을 사용하면 두 API를 병렬로 호출하여 시간을 절약
-            // 결과값을 return 해주어야 Promise.all이 값을 받을 수 있음
-            fetchStations(filtersToRequest),
-            // fetchStationPrediction(filtersToRequest, predictionHours)
-            fetchStationRecommended(filtersToRequest, predictionHours)
-          ]);
+          if(isLongCharging){
+            const [shortestResult, isLongChargingResult] = await Promise.all([
+              fetchShortest(filtersToRequest),
+              fetchLongCharging(filtersToRequest, predictionHours)
+            ]);
 
-          console.log('✅ 현재 데이터:', currentResult?.length || 0, '개');
-          console.log('✅ 추천 데이터:', recommendedResult?.length || 0, '개');
+            setShortest(shortestResult);
+            setIsLongChargingDt(isLongChargingResult);
 
-          setChgerData(currentResult);  
-          // setPredictChgerDt(predictionResult);
-          setRecommendedChgerDt(recommendedResult);
+          } else {
+            const [currentResult, shortestResult, recommendedResult] = await Promise.all([ //Promise.all**을 사용하면 두 API를 병렬로 호출하여 시간을 절약
+              // 결과값을 return 해주어야 Promise.all이 값을 받을 수 있음
+              fetchStations(filtersToRequest),  //, controller.signal
+              fetchShortest(filtersToRequest),
+              // fetchStationPrediction(filtersToRequest, predictionHours)
+              fetchStationRecommended(filtersToRequest, predictionHours)
+            ]);
+
+            console.log('✅ 현재 데이터:', currentResult?.length || 0, '개');
+            console.log('✅ 추천 데이터:', recommendedResult?.length || 0, '개');
+
+            setChgerData(currentResult);
+            setShortest(shortestResult);  
+            // setPredictChgerDt(predictionResult);
+            setRecommendedChgerDt(recommendedResult);
+          }
         } else {
           // 현재
-          const currentResult = await fetchStations(filtersToRequest);
+          const [currentResult, shortestResult] = await Promise.all([ //Promise.all**을 사용하면 두 API를 병렬로 호출하여 시간을 절약
+            // 결과값을 return 해주어야 Promise.all이 값을 받을 수 있음
+            fetchStations(filtersToRequest ),
+            fetchShortest(filtersToRequest),
+            // fetchStationPrediction(filtersToRequest, predictionHours)
+          ]);
 
-          setChgerData(currentResult);  
+          setChgerData(currentResult);
+          setShortest(shortestResult);  
           setRecommendedChgerDt(null);
         }
       } catch(error){
-        console.error('fetchData 에러: ', error);
-        setChgerData([]);
-        setRecommendedChgerDt(null);
+        if (axios.isCancel(error)) {
+            console.log('Request canceled');
+        } else {
+            console.error('fetchData 에러: ', error);
+            setChgerData([]);
+            setShortest(null);
+            setRecommendedChgerDt(null);
+        }
       } finally{
-        setIsLoading(false);
+        // ongoing.current가 현재 컨트롤러와 같을 때만 로딩 종료 (새 요청이 시작되지 않았을 경우)
+            setIsLoading(false);
       }
     };
     fetchData()
 
-  },[myPos, currentFilter, predictionHours, fetchStations, fetchStationRecommended])
+  },[myPos, currentFilter, viewMode, predictionHours, fetchStations, fetchStationRecommended, fetchShortest])
 
   // 📍지도관련 함수들
   // 9. 지도 현위치에서 검색
@@ -658,9 +734,13 @@ export default function Home() {
     });
     }
 
+  // if(isLoading || !myPos){
+  //   return <div className="w-full h-screen flex justify-center items-center bg-black/10"><LottieLoading /></div>
+  // }
+
 
   return (
-    <div className={style.mainContainer}>
+    <div className={`${style.mainContainer} relative `}>
       <Toast message={toastMsg} setMessage={setToastMsg}/>
       {modalInfo.show &&
         <ConfirmModal message={modalInfo.message} submsg={modalInfo.submessage} onConfirm={onConfirm} onCancel={onCancelConrirmModal} />
@@ -678,7 +758,7 @@ export default function Home() {
         />
       </div>
       <div className="flex-grow h-full relative ">
-        {myPos && mapCenter && markers.length > 0 &&
+        {myPos && mapCenter &&  markers.length > 0 &&
           <ChargingMap myPos={myPos} 
                       radius={currentFilter.radius} 
                       mapCenter={mapCenter} 
@@ -689,9 +769,17 @@ export default function Home() {
                       onHoursChange={handlePredictionHours}
                       onMarkerClick = {handleMapMarkerClick}
                       selectionSource = {selectionSource}
+                      shortest={shortest}
+                      isLongCharging={isLongCharging}
+                      onLongChargingChange={setIsLongCharging}
           />
         }
       </div>
+      {(isLoading || !myPos) && (
+        <div className="absolute inset-0 w-full h-full flex justify-center items-center bg-black/50 z-50">
+            <LottieLoading />
+        </div>
+      )}
     </div>
   );
 }

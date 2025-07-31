@@ -39,32 +39,6 @@ const statStatus = [
     { color: '#B05DEA', status: '점검', cnt: '13', percentage: '10%' },
 ]
 
-// '충전소 현황'
-// const statNow = {
-//     waiting: 10,
-//     charging: 8,
-//     error: 0,
-//     inspection: 1,
-//     chargerInfo: {
-//         '01': {
-//             stat: '충전대기',
-//             lastTsdt: '20250704081739'
-//         },
-//         '02': {
-//             stat: '충전중',
-//             lastTsdt: '20250727081739'
-//         },
-//         '03': {
-//             stat: '점검',
-//             lastTsdt: '20250727131739'
-//         },
-//         '04': {
-//             stat: '충전대기',
-//             lastTsdt: '20250704081739'
-//         }
-
-//     }
-// }
 
 // 각 상태에 대한 정의 (이름, 색상, 소스 인덱스)
 const STATUS_DEFINITIONS = [

@@ -511,9 +511,9 @@ export default function page() {
                             <div className='flex justify-end items-center mt-2'>
                               {/* 레퍼런스처럼 연한 회색 아이콘과 버튼으로 변경 */}
                               <div className='flex items-center gap-3 text-gray-400 cursor-pointer'>
-                                <span className='inline-flex items-center justify-center cursor-pointer p-2 rounded-full hover:bg-gray-100 transition'>
+                                {/* <span className='inline-flex items-center justify-center cursor-pointer p-2 rounded-full hover:bg-gray-100 transition'>
                                   <FiMapPin size={20} className="cursor-pointer hover:text-gray-600 transition" />
-                                </span>
+                                </span> */}
                                 <button onClick={() => handleOpenEditPanel(r)} className='inline-flex items-center justify-center cursor-pointer p-2 rounded-full hover:bg-gray-100 transition'>
                                   <IoCalendarClearOutline size={20} className="cursor-pointer hover:text-gray-600 transition" />
                                 </button>

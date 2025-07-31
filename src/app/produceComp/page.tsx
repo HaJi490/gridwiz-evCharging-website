@@ -61,7 +61,7 @@ export default function page() {
                 우리는 지금도 데이터를 움직이고 있습니다.
             </div>
         </div> */}
-
+{/* 
         <div className='mx-[100px] my-30 grid grid-cols-12 gap-5'>
             <div className='col-span-4 h-100 bg-gray-100 rounded-3xl'>
 
@@ -71,15 +71,15 @@ export default function page() {
             </div>
             <div className='relative overflow-hidden col-span-4 h-100 bg-gray-100 rounded-3xl'>
                 <Image src={'/aianalyImg.jpg'} alt='aiImg' fill className='object-cover'/>
-                {/* 2. 반투명 검정색 오버레이 역할을 할 div */}
+                2. 반투명 검정색 오버레이 역할을 할 div
                 <div className="absolute top-0 left-0 w-full h-full bg-black/40" />
                 
-                {/* 3. 텍스트나 다른 컨텐츠 (오버레이보다 위에 위치) */}
+                3. 텍스트나 다른 컨텐츠 (오버레이보다 위에 위치)
                 <div className="relative z-10 flex flex-col items-center justify-center w-full h-full text-gray-300">
                     <p className="px-5 py-1 border rounded-full bg-black/40 mt-4 text-xl">AI Analysis</p>
                 </div>
             </div>
-        </div>
+        </div> */}
        
         <footer className='h-95 pt-10 pb-20 px-[60px] bg-black grid grid-cols-12'>
             <div className='text-white gap-5 col-span-6 flex flex-col'>
