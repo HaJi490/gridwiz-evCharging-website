@@ -85,6 +85,17 @@ export interface BaseChargingStationDto {
     busiNm: string;
     chargerInfo: Record<string, ChargerInfoItem>; //ChargerInfoMap;
     useTime: string;
+
+    minute: number;
+    predTag: string | null; // 혹은 다른 타입일 수 있습니다.
+    bestChoice: any | null; // 실제 타입에 맞게 수정하세요.
+    leastDis: any | null;   // 실제 타입에 맞게 수정하세요.
+    leashTime: any | null;  // 실제 타입에 맞게 수정하세요.
+    canLongUse: any | null; // 실제 타입에 맞게 수정하세요.
+
+    // 👇 예측 DTO에 있던
+    totalNacsNum: number;
+    chargingDemand: number;
 }
 
 // (Member) 현재 충전소 응답 DTO
@@ -92,17 +103,17 @@ export interface ChargingStationResponseDto extends BaseChargingStationDto {
     // 추가되는 속성이 없으므로 비워둡니다.
 }
 
-// (Member) N시간 후 예측 충전소 응답 DTO
+// // (Member) N시간 후 예측 충전소 응답 DTO
 export interface ChargingStationPredictionResponseDto extends BaseChargingStationDto {
     // 예측 DTO에만 있는 속성만 여기에 추가합니다.
-    totalNacsNum: number;
-    chargingDemand: number;
+    // totalNacsNum: number;
+    // chargingDemand: number;
 }
-// (Member) 리스트 패널의 아이템을 위한 새로운 타입을 선언합니다.
+// // (Member) 리스트 패널의 아이템을 위한 새로운 타입을 선언합니다.
 export interface StationListItem extends ChargingStationResponseDto {
     // changeStatus: 'increase' | 'decrease' | 'same' | 'none';
-    predTag?: string;
-    minute?: number; // 소요시간
+    predTag: string;
+    minute: number; // 소요시간
 }
 
 // (Member) 예측응답 dto ver.2
@@ -363,25 +374,7 @@ export interface History {
     chargingHistory: ChargingHistoryItem[]; // 충전 내역 리스트
 };
 
-// (manager) 회원정보
-/**
- * API 응답에 포함된 개별 사용자 정보입니다. (기존과 거의 동일)
- */
-export interface User {
-  username: string;
-  nickname: string;
-  password: string | null;
-  phoneNumber: string;
-  email: string;
-  sex: string | null;
-  zipcode: string | null;
-  role: string[];
-  roadAddr: string | null;
-  detailAddr: string | null;
-  enabled: boolean;
-  createAt: string;
-}
-
+// 📍(manager) 회원정보
 /**
  * HATEOAS 응답의 _links 객체에 포함된 링크 정보입니다.
  */
@@ -389,10 +382,11 @@ export interface Link {
   href: string;
 }
 export interface Links {
-  first: Link;
   self: Link;
-  next: Link;
-  last: Link;
+  first?: Link;
+  prev?: Link;
+  next?: Link;
+  last?: Link;
 }
 
 /**
@@ -411,11 +405,37 @@ export interface PageInfo {
  */
 export interface HateoasPageResponse<T> {
   _embedded: {
-    // 👇 API 응답의 실제 데이터 배열 키 (memberDtoList)
-    memberDtoList: T[]; 
+    [key: string]: T[]; 
   };
   _links: Links;
   page: PageInfo;
+}
+
+// 멤버 페이지
+export interface User {
+  username: string;
+  nickname: string;
+  password: string | null;
+  phoneNumber: string;
+  email: string;
+  sex: string | null;
+  zipcode: string | null;
+  role: string[];
+  roadAddr: string | null;
+  detailAddr: string | null;
+  enabled: boolean;
+  createAt: string;
+}
+
+// 문의게시글 페이지
+export interface InquiryBoard {
+  id: number;
+  title: string;
+  content: string;
+  memberUsername: string;
+  createdAt: string | null; // null이 올 수 있으므로 | null 을 추가하는 것이 중요!
+  updatedAt: string;
+  enabled: boolean;
 }
 
 

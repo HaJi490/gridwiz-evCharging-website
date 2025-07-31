@@ -64,6 +64,8 @@ export default function Home() {
   const [predictionHours, setPredictionHours] = useState<number>(0);             // 몇시간 후 예측인지
   const [predictChgerDt, setPredictChgerDt] = useState<ChargingStationPredictionResponseDto[] | null >(null);
   const [recommendedChgerDt, setRecommendedChgerDt] = useState<RecommendedStationDto[] | null>(null);
+  const [shortestDistance, setShortestDistance] = useState<ChargingStationResponseDto[] | null>(null);
+  const [shortestTime, setShortestTime] = useState<ChargingStationResponseDto[] | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const [token] = useAtom(accessTokenAtom) ;
@@ -125,6 +127,60 @@ export default function Home() {
       return [];
     }
   }, []); 
+
+  // 최단거리, 최소시간 요청
+  const fetchShortest = useCallback(async(filtersToApply: Filters)=>{
+    console.log('[Home] 13. 최단최소 정보요청')
+    ongoing.current?.abort();                   // 직전 요청 취소
+    const controller = new AbortController();   // 새 컨트롤러
+    ongoing.current = controller;
+
+    
+    // API 요청 DTO에 맞게 필터 객체 구성
+    const requestBody: ChargingStationRequestDto = {
+      "coorDinatesDto" : {
+        lat: filtersToApply.lat,
+        lon: filtersToApply.lon,
+        radius: filtersToApply.radius,
+      },
+      "mapQueryDto":{
+        useMap: true,
+        canUse: filtersToApply.canUse,
+        parkingFree: filtersToApply.parkingFree,
+        limitYn: filtersToApply.limitYn,
+        chgerType: filtersToApply.chargerTypes.length > 0 ? filtersToApply.chargerTypes : [], // 빈 배열일 때 undefined로 보내는 등 백엔드에 맞게 조정
+        busiId: filtersToApply.chargerComps.length > 0 ? CompNmToIds(filtersToApply.chargerComps) : [],
+        outputMin: filtersToApply.outputMin,
+        outputMax: filtersToApply.outputMax,
+        keyWord: filtersToApply.keyWord
+      }
+    };
+
+    console.log("API 최단요청 보낼 필터:", requestBody);
+    try {
+      const [getShortestDistance, getShortestTime] = await Promise.all([
+        axios.post<ChargingStationResponseDto[]>(
+          `http://${process.env.NEXT_PUBLIC_BACKIP}:8080/map/get/near`,
+          requestBody,
+          { signal: controller.signal } 
+        ),
+        axios.post<ChargingStationResponseDto[]>(
+          `http://${process.env.NEXT_PUBLIC_BACKIP}:8080/map/get/near`,
+          requestBody,
+          { signal: controller.signal } 
+        )
+      ])
+
+      setShortestDistance(getShortestDistance);
+      
+
+      // return statResp;  //🍕 위에주석풀기
+    } catch (err) {
+      if (axios.isCancel(err)) return;            // “정상 취소”는 무시
+      console.error("fetchStations error: ", err);
+      return [];
+    }
+  },[])
 
   // 받은 chgerData markers에 넣기(지도)
   const markers = useMemo(() => {

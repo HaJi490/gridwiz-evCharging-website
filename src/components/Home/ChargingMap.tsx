@@ -4,10 +4,12 @@ import React, { useCallback, useEffect, useState } from 'react'
 import { Map, MapMarker, useKakaoLoader, CustomOverlayMap, Circle, MarkerClusterer } from 'react-kakao-maps-sdk'
 import Image from 'next/image';
 
+import { ChargingStationResponseDto } from '@/types/dto';
 import TimeFilter from '../Admin/filters/TimeFilter';
 import LottieLoading from '../LottieLoading';
 import { IoRefreshOutline } from "react-icons/io5";
 import { BsExclamation } from "react-icons/bs";
+import { tree } from 'next/dist/build/templates/app-page';
 
 
 interface ChargingMapProps {
@@ -21,6 +23,8 @@ interface ChargingMapProps {
     onHoursChange: React.Dispatch<React.SetStateAction<number>>; // setter 타입
     onMarkerClick: (markerId: string) => void;
     selectionSource : 'list' | 'map' | null;
+    shortestDistance?: ChargingStationResponseDto,
+    shortestTime?: ChargingStationResponseDto,
 }
 
 type MarkerType = {
@@ -71,7 +75,9 @@ export default function ChargingMap({
     predictHours, 
     onHoursChange,
     onMarkerClick,
-    selectionSource
+    selectionSource,
+    shortestDistance,
+    shortestTime
 }: ChargingMapProps) {
     const [map, setMap] = useState<kakao.maps.Map>(null); // 지도인스턴스 저장
     const [infoWindow, setInfoWindow] = useState<InfoWindowState>(null);
@@ -79,9 +85,15 @@ export default function ChargingMap({
     
     const [isMapMoved, setIsMapMoved] = useState(false);
     const [showPredictBtn, setShowPredictBtn] = useState<boolean>(false);
+    const [showRecommend, setShowRecommend] = useState<boolean>(true);
 
     const MIN_CLUSTER_LEVEL = 6; // 클러스터링 최소레벨
 
+
+    // 페이지 새로고침
+    const handleRetry = () => {
+        window.location.reload();
+    };
 
     // 1. Hook을 이용하여 Kakao맵 불러오기
     const [loading, error] = useKakaoLoader({
@@ -168,11 +180,11 @@ export default function ChargingMap({
         return (
         <div className='w-full h-full gap-5 flex flex-col justify-center items-center bg-[#f2f2f2]'>
             <div className='flex flex-col justify-center items-center gap-2'>
-                <p className='text-2xl font-bold text-[#232323]'>지도를 불러오지 못했습니다.</p>    
+                <p className='text-xl font-bold text-[#232323]'>지도를 불러오지 못했습니다.</p>    
                 <p className='text-lg text-[#666]'>네트워크 상태를 확인하거나 다시 시도해주세요.</p> 
             </div>
             <button
-                onClick={retry}
+                onClick={handleRetry}
                 className='confirm px-5 py-2 rounded-lg cursor-pointer hover:bg-green-800 transition'
             >
                 다시시도
@@ -234,7 +246,7 @@ export default function ChargingMap({
                                 let imgSize = { width: 12, height: 12 };
 
                                 if (isSelected || isInfoWindowOpen) {
-                                    imgSrc = 'isSelected.png'
+                                    imgSrc = '/isSelected.png'
                                     imgSize = { width: 50, height: 50 };
                                 } else if (isRecommend) {
                                     //작은거 20/20/ yanchor=1  //원래 32/32/1.35 //제일 큰거 50/50/1.85
@@ -321,6 +333,8 @@ export default function ChargingMap({
                         zIndex={1000}    
                     >
                         <div className='px-5 py-2 flex gap-2 justify-center bg-[#F7FECD] border-[#CACFAC] rounded-full shadow-lg'>
+                            
+                            
                             {/* 충전기 타입별 개수 */}
                             {/* 급속 충전기 */}
                                 {infoWindow.chargerTypes.fastTotal > 0 && (
@@ -363,6 +377,34 @@ export default function ChargingMap({
                     현 지도에서 검색
                 </button>
             )}
+
+            {/* 추천 충전소 */}
+            <div className='absolute top-5 right-5 z-10'>
+                <div className='relative group/icon'>
+                    <button 
+                            onClick={()=>setShowRecommend(!showRecommend)}
+                            className='p-1 mr-1 border-2 border-white text-white bg-[#4FA969] rounded-full 
+                                    z-10 cursor-pointer shadow-lg hover:bg-green-700 transition-colors'
+                    >
+                        <BsExclamation size={20}/>
+                    </button>
+                    {showRecommend &&
+                        <div className="absolute top-[70px] -translate-y-1/2 right-full mr-2
+                            p-3 bg-white  text-black shadow-lg  rounded-lg 
+                            transition-all whitespace-nowrap flex flex-col">
+                            <button className='px-3 py-2 text-left'>
+                                <p className='font-bold text-sm text-[#4FA969]'>최단거리 추천</p>
+                                <p className='text-xs font-bold'>충전소이름</p>
+                                <p className='text-xs'>주소</p>
+
+                            </button>
+                            <button>
+                                <p className='font-bold text-[#4FA969]'>최소시간 추천</p>
+                            </button>
+                        </div>
+                    }
+                </div>
+            </div>
             
             <div className='absolute bottom-5 right-5 z-10 flex flex-col items-end gap-2'>
                 <div className='relative group/icon'>
@@ -371,14 +413,28 @@ export default function ChargingMap({
                     >
                         <BsExclamation size={20}/>
                     </div>
-                    <div className="absolute top-1/2 -translate-y-1/2 right-full mr-2
-                        px-2 py-1 bg-black/70 text-white text-sm rounded
+                    <div className="absolute top-[-35px] -translate-y-1/2 right-full mr-2
+                        p-5 bg-black/70 text-white text-sm rounded-lg 
                         opacity-0 invisible group-hover/icon:opacity-100 group-hover/icon:visible transition-all whitespace-nowrap">
-                        <p>시간을 조정하여 최적의 충전소를 추천해드립니다.</p>
-                        <Image src={'/recommended_0.png'} alt='reco0' width={50} height={50}/>
-                        <Image src={'/recommended_1y.png'} alt='reco1' width={5} height={5}/>
-                        <Image src={'/recommended_2o.png'} alt='reco2' width={5} height={5}/>
-                        <Image src={'/recommended_3r.png'} alt='reco3' width={5} height={5}/>
+                        <p className='mb-3 font-bold'>시간을 조정하여 최적의 충전소를 추천해드립니다.</p>
+                        <div className='grid grid-cols-2 gap-4'>
+                            <div className='flex items-center gap-2'>
+                                <img src='/recommend_1.png' alt='10분이내' width={30} height={30} className='flex-shrink-0'/>
+                                <span className='text-sm'>10분 이내</span>
+                            </div>
+                            <div className='flex items-center gap-2'>
+                                <img src='/recommend_1y.png' alt='30분이내' width={30} height={30} className='flex-shrink-0'/>
+                                <span className='text-sm'>30분 이내</span>
+                            </div>
+                            <div className='flex items-center gap-2'>
+                                <img src='/recommend_2o.png' alt='60분이내' width={20} height={20} className='flex-shrink-0'/>
+                                <span className='text-sm'>60분 이내</span>
+                            </div>
+                            <div className='flex items-center gap-2'>
+                                <img src='/recommend_3r.png' alt='60분이상' width={20} height={20} className='flex-shrink-0'/>
+                                <span className='text-sm'>60분 이상</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <button

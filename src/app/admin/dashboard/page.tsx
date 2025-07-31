@@ -154,7 +154,7 @@ export default function page() {
     const [currentFilter, setCurrentFilter] = useState<HeatmapFilter>({
         time: 6,
         region: '금정구',
-        date:  new Date('2025-08-02T13:00:00+09:00'),
+        date:  new Date('2025-07-31T13:00:00+09:00'),
     });
     const [heatmapDt, setHeatmapDt] = useState<ActualChargingStationData[] | null>(null);
     const [totalStatDt, setTotalStatDt] = useState<ChargerTotalStatusData>(null);

@@ -21,9 +21,9 @@ const navItems = [
         path:'/admin/dashboard',
     },
     {
-        name: 'Reservation',
+        name: 'Inquiry',
         icon: <FiCalendar size={20}/>,
-        path: '/admin/manageReserv'
+        path: '/admin/manageInquiry'
     },
     {
         name: 'Customers',

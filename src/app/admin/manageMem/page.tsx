@@ -4,11 +4,12 @@ import React, {useCallback, useEffect, useState} from 'react';
 import axios from 'axios';
 import { useAtom } from 'jotai';
 import { accessTokenAtom } from '@/store/auth';
-import {User, PageInfo, Links , HateoasPageResponse } from '@/types/dto'; 
 
+import {User, PageInfo, Links , HateoasPageResponse } from '@/types/dto'; 
+import BaseDetailModal from '@/components/Admin/detailModal/BaseDetailModal';
+import MemberDetailContent from '@/components/Admin/detailModal/MemDetailContent';
 import LottieLoading from '@/components/LottieLoading';
 import { FiBell } from "react-icons/fi";
-import style from './manageMem.module.css';
 import { FiChevronLeft } from "react-icons/fi"; // 이전
 import { FiChevronRight } from "react-icons/fi";  // 다음
 import { MdFirstPage } from "react-icons/md"; // 처음
@@ -28,17 +29,18 @@ interface SortConfig {
 
 export default function page() {
   const [token] = useAtom(accessTokenAtom);
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedMember, setSelectedMember] = useState<User | null>(null);
 
   const [members, setMembers] = useState<User[]>([]);
   const [pageInfo, setPageInfo] = useState<PageInfo | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [links, setLinks] = useState<Links | null>(null); 
 
   const [currentPage, setCurrentPage] = useState<number>(0); // API는 0부터 시작
   const [sortConfig, setSortConfig] = useState<SortConfig>({
     field: 'createAt',
     direction: 'desc',
   });
-  const [links, setLinks] = useState<Links | null>(null); 
 
   const fetchMembers = useCallback(async(url: string) => {  //page: number, sort: SortConfig
     if (!token){
@@ -47,7 +49,6 @@ export default function page() {
     } 
       
     setIsLoading(true);
-    console.log(localStorage.getItem('accessToken'));
     try{
       const res = await axios.get<HateoasPageResponse<User>>(url,
         { 
@@ -68,7 +69,7 @@ export default function page() {
       }
       console.log(res.data);
     } catch(error) {
-      console.error('getMemberInfo 에러: ', error);
+      console.error('fetchMembers 에러: ', error);
       setMembers([]);
     }finally {
     setIsLoading(false);
@@ -110,8 +111,8 @@ export default function page() {
   }
 
   return (
-    <div className="w-full bg-gray-50 min-h-screen p-8 pt-15 lg:px-25 md:px-15 font-sans flex flex-col justify-center items-center">
-      <header className='w-full flex justify-between items-center mb-10 mx-5'>
+    <div className="w-full bg-gray-50 min-h-screen p-8 pt-15 lg:px-25 md:px-15 font-sans flex flex-col justify-start items-center">
+      <header className='w-full flex justify-between items-center mb-10 px-5'>
           <h1 className='text-5xl font bold  text-gray-800'>Members</h1>
           {/* <button className='relative p-2 rounded-full cursor-pointer hover:bg-gray-200'>
               <FiBell size={23} />
@@ -145,7 +146,7 @@ export default function page() {
           </div>
       </header>
       {/* 테이블 헤더*/}
-      <div className=''>
+      <div className='w-full'>
         <div className='bg-[#232323] w-full grid grid-cols-12
                         px-8 py-4 rounded-full text-white'
           >
@@ -170,6 +171,7 @@ export default function page() {
           {members.map(mem => (
               <React.Fragment  key={mem.username}>
                 <div 
+                  onClick={() => setSelectedMember(mem)}
                   className='grid grid-cols-12 px-8 py-6 cursor-pointer rounded-lg hover:bg-gray-200/50'
                 >
                   <span className='col-span-3 font-semibold mr-5 truncate'>
@@ -188,7 +190,7 @@ export default function page() {
                   </span>
                   <div className='col-span-2 flex justify-start items-center'>
                     <span className={`rounded-full py-1 px-4 font-medium ${mem.enabled? 'bg-[#D9F7E5] text-[#4FA969]' : 'bg-[#FFE8EC] text-[#CE1C4C]'}`}>
-                      {mem.enabled? '회원' : '탈퇴'}
+                      {mem.enabled? '사용 중' : '탈퇴'}
                     </span>
                   </div>
                   <span className='col-span-2'>
@@ -244,7 +246,13 @@ export default function page() {
           </button>
         </div>
       )} 
-      
+      <BaseDetailModal
+        isOpen={!!selectedMember}
+        onClose={()=> setSelectedMember(null)} 
+        title= '멤버 상세정보'
+      >
+        {selectedMember && <MemberDetailContent member={selectedMember} />}
+      </BaseDetailModal>
     </div>
   )
 }
