@@ -26,7 +26,7 @@ export interface ChargingStationRequestDto {
 export interface ChargingStationPredictionRequestDto {
     coorDinatesDto: CoordinatesDto;
     mapQueryDto: MapQueryDto;
-    time: string;
+    time: Date;
 }
 
 // 전기차충전소 응답dto

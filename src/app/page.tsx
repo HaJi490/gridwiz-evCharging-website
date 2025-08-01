@@ -347,19 +347,30 @@ export default function Home() {
     console.log('포맷팅한 시간: ', requestDate);
     console.log('최종요청 시간: ', requestDate);
     
-    // const requestBody = {
-    //   "coorDinatesDto" : {
-    //     lat: filtersToApply.lat,
-    //     lon: filtersToApply.lon,
-    //     radius: filtersToApply.radius,
-    //   },
-    //   // time: "2025-07-23T00:31:45.380Z", //🥕🥕수정
-    // };
-    const requestBody = {
-      lat: filtersToApply.lat,
-      lon: filtersToApply.lon,
-      radius: filtersToApply.radius,
+     const requestBody: ChargingStationPredictionRequestDto = {
+      "coorDinatesDto" : {
+        lat: filtersToApply.lat,
+        lon: filtersToApply.lon,
+        radius: filtersToApply.radius,
+      },
+      "mapQueryDto":{
+        useMap: true,
+        canUse: filtersToApply.canUse,
+        parkingFree: filtersToApply.parkingFree,
+        limitYn: filtersToApply.limitYn,
+        chgerType: filtersToApply.chargerTypes.length > 0 ? filtersToApply.chargerTypes : [], // 빈 배열일 때 undefined로 보내는 등 백엔드에 맞게 조정
+        busiId: filtersToApply.chargerComps.length > 0 ? CompNmToIds(filtersToApply.chargerComps) : [],
+        outputMin: filtersToApply.outputMin,
+        outputMax: filtersToApply.outputMax,
+        keyWord: filtersToApply.keyWord
+      },
+      time: requestDate // kdt, utc 물어보기
     };
+    // const requestBody = {
+    //   lat: filtersToApply.lat,
+    //   lon: filtersToApply.lon,
+    //   radius: filtersToApply.radius,
+    // };
     console.log('추천충전소 요청 필터: ', requestBody);
 
     try{
@@ -369,6 +380,7 @@ export default function Home() {
         // {headers: { Authorization: `Bearer ${token}`}}
       );
       const data = Array.isArray(res.data) ? res.data : [];
+      console.log('fetchStationRecommended: ', res.data);
       return data;
     } catch(err){
       if(axios.isCancel(err)) return;
@@ -526,9 +538,9 @@ export default function Home() {
       setIsLoading(true); // 로딩시작
 
       // AbortController를 여기서 생성
-      // ongoing.current?.abort();
-      // const controller = new AbortController();
-      // ongoing.current = controller;
+      ongoing.current?.abort();
+      const controller = new AbortController();
+      ongoing.current = controller;
       
       const filtersToRequest = {
           ...currentFilter,
@@ -553,7 +565,7 @@ export default function Home() {
           } else {
             const [currentResult, shortestResult, recommendedResult] = await Promise.all([ //Promise.all**을 사용하면 두 API를 병렬로 호출하여 시간을 절약
               // 결과값을 return 해주어야 Promise.all이 값을 받을 수 있음
-              fetchStations(filtersToRequest),  //, controller.signal
+              fetchStations(filtersToRequest ),  //, controller.signal
               fetchShortest(filtersToRequest),
               // fetchStationPrediction(filtersToRequest, predictionHours)
               fetchStationRecommended(filtersToRequest, predictionHours)
