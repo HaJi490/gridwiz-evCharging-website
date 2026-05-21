@@ -1,75 +1,56 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useCallback } from 'react'
 import { useAtom } from 'jotai'
 import { useRouter } from 'next/navigation'
+import { throttle } from 'lodash'
 import { accessTokenAtom, tokenExpireAtAtom } from '@/store/auth'
-import { jwtDecode } from 'jwt-decode'
 
-interface DecodedToken {
-    exp: number;
-}
 
 export default function TokenExpireWatcher() {
-    const [token, setToken] = useAtom(accessTokenAtom)
-    const [expireAt, setExpireAt] = useAtom(tokenExpireAtAtom)
+    const [token, setToken] = useAtom(accessTokenAtom);
+    const [expireAt, setExpireAt] = useAtom(tokenExpireAtAtom);
     const route = useRouter();
 
-    // 마운트시에도 체크
-    useEffect(() => {
-    if (expireAt && Date.now() > expireAt) {
+    // [기능 1] 로그아웃 공통 처리
+    const handleLogout = useCallback(() => {
         setToken(null);
         setExpireAt(null);
-        route.push('/login?toast=자동 로그아웃 되었습니다.');
-    }
-    }, []);
+        route.push('/login??toast=세션이 만료되어 자동 로그아웃 되었습니다.')
+    }, [setToken, setExpireAt, route]);
 
-    // 1. 자동로그아웃 타이머
+    // [기능 2] 세션 만료 여부 주기적 감시 (Polling)
     useEffect(() => {
         const checkToken = () => {
-            if (expireAt && Date.now() > expireAt) {
-                setToken(null)
-                setExpireAt(null)
-                route.push('/login?toast=자동 로그아웃 되었습니다.');
+            if (expireAt && Date.now() < expireAt) {
+                handleLogout();
             }
-        }
+        };
 
         checkToken();
-        const timer = setInterval(checkToken, 60000) ;// 1분마다 검사
-
+        const timer = setInterval(checkToken, 60000);
         return () => clearInterval(timer);
-    }, [expireAt])
+    }, [expireAt, handleLogout]);
 
-//     useEffect의 세상 (React의 세상):
-// useEffect 안의 코드는 컴포넌트가 렌더링될 때 실행됩니다.
-// 의존성 배열은 **"어떤 값이 바뀌었을 때 이 useEffect 코드를 다시 실행할지"**를 React에게 알려주는 규칙서입니다.
-// setInterval의 세상 (브라우저의 세상):
-// setInterval(함수, 시간)은 useEffect가 실행되는 그 순간, 브라우저에게 "이 함수를 앞으로 시간 간격마다 계속 실행해줘!" 라고 단 한 번 예약하는 것과 같습니다.
-// 일단 예약이 완료되면, 그 타이머는 React의 렌더링 주기나 의존성 배열과는 전혀 상관없이 독립적으로 동작합니다.
+    // [기능 3] Sliding Expiration: 사용자 활동 감지 시 세션 연장
+    useEffect(() => {
+        if (!token || !expireAt) return;
 
-    // 2. 유저활동 감지 -> 만료시간 연장
-    // useEffect(() => {
-    //     if(!token) return;
+        const extendSession = throttle(() => {
+            const NEW_EXPIRE_TIME= Date.now() + 2 * 60 * 1000;
+            setExpireAt(NEW_EXPIRE_TIME);
+            console.log('세션이 연장되었습니다.')
+        }, 30000);
 
-    //     const extendExpireTime = () => {
-    //     if (expireAt) {
-    //         const newExpireAt = Date.now() + 2 * 60 * 60 * 1000;
-    //         setExpireAt(newExpireAt)
-    //     }
-    //     }
+        const events = ['mousedown', 'keydown', 'scroll', 'touchstart'];
+        events.forEach(e => window.addEventListener(e, extendSession));
 
-    //     const events = ['click', 'keydown', 'scroll', 'mousemove'];
-    //     events.forEach(event =>
-    //     window.addEventListener(event, extendExpireTime)
-    //     );
-
-    //     return () => {
-    //     events.forEach(event =>
-    //         window.removeEventListener(event, extendExpireTime)
-    //     );
-    //     };
-    // }, [expireAt])
+        return () => {
+            events.forEach(e => window.removeEventListener(e, extendSession));
+            extendSession.cancel();
+        }
+    }, [token, expireAt, setExpireAt]);
 
 
-    return null // 이 컴포넌트는 UI에 아무것도 안 보여줌
+    return null; 
 }
