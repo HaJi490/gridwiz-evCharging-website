@@ -1,131 +1,134 @@
 'use client'
 
-import React from 'react'
+import {useMemo} from 'react'
 import {
-    AreaChart,
-    Area,
-    XAxis,
-    YAxis,
-    CartesianGrid,
-    Tooltip,
-    ResponsiveContainer
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer
 } from 'recharts';
 
 import { WeekdayDemand } from '@/types/dto';
 import style from './ChargingDemandLineChart.module.css'
 
-  // 1. 한달 수요 예측 데이터
-  const forecastData = [
-  { stationLocation: 'CSCS2015', dayOfWeek: 'Monday', kwhRequest: 19.776451612903223 },
-  { stationLocation: 'CSCS2015', dayOfWeek: 'Tuesday', kwhRequest: 27.214499999999994 },
-  { stationLocation: 'CSCS2015', dayOfWeek: 'Wednesday', kwhRequest: 22.267000000000003 },
-  { stationLocation: 'CSCS2015', dayOfWeek: 'Thursday', kwhRequest: 21.98606060606061 },
-  { stationLocation: 'CSCS2015', dayOfWeek: 'Friday', kwhRequest: 23.62666666666667 },
-  { stationLocation: 'CSCS2015', dayOfWeek: 'Saturday', kwhRequest: 22.694242424242432 }
-  ];
+/**
+* 영문 요일 명칭을 한글 약어로 매핑하는 객체
+*/
+const DAY_KOR_MAP = {
+  Sunday: '일',
+  Monday: '월',
+  Tuesday: '화',
+  Wednesday: '수',
+  Thursday: '목',
+  Friday: '금',
+  Saturday: '토',
+};
 
-  const dayKor = {
-    Sunday: '일',
-    Monday: '월',
-    Tuesday: '화',
-    Wednesday: '수',
-    Thursday: '목',
-    Friday: '금',
-    Saturday: '토',
-  };
-
-  // 한글 요일 정렬 기준
-  const korDayOrder = ['일', '월', '화', '수', '목', '금', '토'];
+/**
+ * 차트 출력 시 요일별 정렬 순서를 정의하는 상수 (일요일부터 토요일 순)
+ */
+const KOR_DAY_ORDER = ['일', '월', '화', '수', '목', '금', '토'];
 
 
-  // 2. 마우스를 올렸을 때 보여줄 커스텀 툴팁 컴포넌트
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className={style.custom_tooltip}>
-          <p className={style.custom_label}>{`수요량: ${payload[0].value.toFixed(3)}`}</p>
-          <p className={style.custom_intro}>{`요일: ${label}`}</p>
-        </div>
-      );
-    }
-    return null;
-  };
-
-  interface ChargingDemandLineChartProps {
-    statData: WeekdayDemand[]
+/**
+ * 차트 마우스 오버 시 노출되는 커스텀 툴팁 컴포넌트
+ * @param {boolean} active - 툴팁 활성화 여부
+ * @param {any[]} payload - 현재 포인트의 데이터 세트
+ * @param {string} label - 현재 포인트의 X축 레이블(요일)
+ */
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className={style.custom_tooltip}>
+        <p className={style.custom_label}>{`수요량: ${payload[0].value.toFixed(3)} kWh`}</p>
+        <p className={style.custom_intro}>{`요일: ${label}요일`}</p>
+      </div>
+    );
   }
+  return null;
+};
 
-export default function ChargingDemandLineChart({statData}: ChargingDemandLineChartProps) {
+interface ChargingDemandLineChartProps {
+  /** 충전소별 요일별 수요 예측 데이터 배열 */
+  statData: WeekdayDemand[]
+}
 
-  // 3. 차트 클릭 시 실행될 함수
+
+/**
+ * 충전소 수요 예측 라인(영역) 차트 컴포넌트
+ * 특정 충전소의 주간 수요 패턴을 시각화하며, 데이터 클릭 및 호버 인터랙션을 제공합니다.
+ */
+export default function ChargingDemandLineChart({ statData }: ChargingDemandLineChartProps) {
+
+  /**
+   * 차트의 데이터 포인트를 클릭했을 때 상세 정보를 처리하는 핸들러
+   * @param {any} chartState - Recharts에서 전달하는 클릭 시점의 상태 객체
+   */
   const handleChartClick = (chartState: any) => {
-    // chartState.activePayload: 클릭된 지점의 데이터가 배열
-    if (chartState && chartState.activePayload && chartState.activePayload.length > 0) {  
-      // 2. 콘솔에 전체 상태 객체를 찍어 구조를 확인해봅니다.
-      console.log("--- Recharts가 전달한 전체 상태 객체 (chartState) ---");
-      console.log(chartState);
-
+    if (chartState && chartState.activePayload && chartState.activePayload.length > 0) {
       const clickedData = chartState.activePayload[0].payload;
-      console.log("--- 클릭된 지점의 원본 데이터 (clickedDataPayload) ---");
-      console.log('클릭된 데이터:', clickedData);
-      
-      // 여기에 백엔드로 데이터를 보내는 로직을 추가
-      // 예: sendDataToBackend(clickedData);
       alert(`선택된 날짜: ${clickedData.date}, 수요량: ${clickedData.demand}`);
-    } else {
-      // 빈 공간을 클릭했을 때
-      console.log("차트의 데이터 포인트가 아닌 빈 공간이 클릭되었습니다.");
     }
   };
 
-  // 데이터 변환 + 정렬(요일)
-  const converted = statData?.map( item => {
-    const kor = dayKor[item.dayOfWeek];
+  /**
+   * 서버로부터 받은 데이터를 차트 표시에 적합하도록 한글화 및 정렬 수행
+   * @returns {Array} 요일 순서로 정렬된 차트용 데이터 배열
+   */
+  const processedData = useMemo(() => {
+        if (!statData) return [];
 
-    return {
-      ...statData,
-      dayOfWeek: kor,
-    }
-  }).sort((a, b) => korDayOrder.indexOf(a.dayOfWeek) - korDayOrder.indexOf(b.dayOfWeek));
-
-  console.log('데이터변환, 정렬: ', converted);
+        return statData
+            .map(item => ({
+                ...item,
+                dayOfWeek: DAY_KOR_MAP[item.dayOfWeek] || item.dayOfWeek,
+            }))
+            .sort((a, b) => KOR_DAY_ORDER.indexOf(a.dayOfWeek) - KOR_DAY_ORDER.indexOf(b.dayOfWeek));
+    }, [statData]);
 
 
   return (
     <div className='w-full h-[350px]'>
       <ResponsiveContainer>
-        <AreaChart data={statData} onClick={handleChartClick} 
-                  margin={{ top: 10, right: 30, left: 0, bottom: 20 }}>
+        <AreaChart 
+          data={processedData} 
+          onClick={handleChartClick}
+          margin={{ top: 10, right: 30, left: 0, bottom: 20 }}
+        >
 
-          {/* 그라데이션 효과 정의 */}
+          {/* 그라데이션 정의 */}
           <defs>
             <linearGradient id='colorDemand' x1='0' y1='0' x2='0' y2='1'>
-              <stop offset='5%' stopColor='#4FA969' stopOpacity={0.8}/>
-              <stop offset='95%' stopColor='#4FA969' stopOpacity={0}/>
+              <stop offset='5%' stopColor='#4FA969' stopOpacity={0.8} />
+              <stop offset='95%' stopColor='#4FA969' stopOpacity={0} />
             </linearGradient>
           </defs>
 
-          {/* X축 (날짜). tickFormatter로 날짜 형식을 보기 좋게 변경 */}
-          <XAxis dataKey='dayOfWeek' //tickFormatter={(week)=>dayKor(week)}        // (dateStr) => new Date(dateStr).getDate() + '일'
-                tick={{fill: '#888888'}} fontSize={12} dy={10}/>
+          {/* 그리드 설정 */}
+          <CartesianGrid strokeDasharray={'3 3'} vertical={false} />
 
-          {/* y축(수요량) */}
-          <YAxis tick={{fill: '#888888'}} fontSize={12}/>
+          {/* X축: 요일 정보 */}
+          <XAxis dataKey='dayOfWeek'
+            tick={{ fill: '#888888' }} fontSize={12} dy={10} />
 
-          {/* 배경그리드 */}
-          <CartesianGrid strokeDasharray={'3 3'} vertical={false}/>
+          {/* Y축: kWh 수요량 */}
+          <YAxis tick={{ fill: '#888888' }} fontSize={12} />
 
-          {/* 커스텀 툴팁 연결 _ 컴포넌트? */}
-          <Tooltip content={<CustomTooltip/>} /> 
 
-          {/* 실제 그래프를 그리는 Area컴포넌트 */}
+          {/* 인터랙티브 요소 */}
+          <Tooltip content={<CustomTooltip />} />
+
+          {/* 데이터 시각화 */}
           <Area type='monotone'
-              dataKey='kwhRequest'
-              stroke='#4FA969'
-              strokeWidth={3}
-              fillOpacity={1}
-              fill='url(#colorDemand)' // 위에서 정의한 그라데이션 id
-              activeDot={{r:8, stroke: '#fff', strokeWidth: 2}} // 활성화된 점 스타일
+            dataKey='kwhRequest'
+            stroke='#4FA969'
+            strokeWidth={3}
+            fillOpacity={1}
+            fill='url(#colorDemand)'
+            activeDot={{ r: 8, stroke: '#fff', strokeWidth: 2 }}
           />
         </AreaChart>
       </ResponsiveContainer>

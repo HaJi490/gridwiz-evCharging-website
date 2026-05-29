@@ -2,45 +2,51 @@
 
 import React from 'react';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Cell } from 'recharts';
-import style from './StatusBarChart.module.css'
 
-// 이 컴포넌트가 받을 props의 타입을 정의합니다.
+/**
+ * 차트 데이터 아이템 인터페이스
+ */
 interface StatusItem {
+    /** 상태 명칭 (예: 충전중, 고장 등) */
     status: string;
+    /** 해당 상태의 장비 수 */
     cnt: number;
+    /** 차트에서 사용할 색상 코드 */
     color: string;
+    /** 상태 고유 인덱스 */
     statIdx: number;
 }
 
+/**
+ * StatusBarChart 컴포넌트 Props 인터페이스
+ */
 interface StatusBarChartProps {
+    /** 실시간 상태 통계 데이터 배열 */
     data: StatusItem[];
 }
 
+/**
+ * 충전기 실시간 상태 분포 바 차트 컴포넌트
+ * 장비의 다양한 상태 비중을 단일 수평 스택 바(Stacked Bar) 형태로 시각화하며,
+ * 전체 대비 점유율을 직관적으로 제공합니다.
+ */
 export default function StatusBarChart({ data }: StatusBarChartProps) {
-    if (!data || data.length === 0) {
-        return null;
-    }
+    if (!data || data.length === 0) return null;
 
-    // 전체 합계 계산
+    /**
+     * 전체 상태의 합계를 계산
+     * @returns {number} 총 장비 수
+     */
     const total = data.reduce((sum, item) => sum + item.cnt, 0);
-    
-    // 누적 퍼센트를 포함한 데이터 생성
-    let cumulative = 0;
-    const chartData = data.map(item => {
-        const percentage = (item.cnt / total) * 100;
-        const result = {
-            ...item,
-            percentage,
-            cumulative
-        };
-        cumulative += percentage;
-        return result;
-    });
 
-    // 단일 행 데이터로 변환 (모든 값을 하나의 객체에)
+    /**
+     * Recharts의 Stacked Bar 레이아웃에 적합하도록 
+     * 배열 데이터를 단일 행(Single Row) 객체 구조로 변환
+     * @returns {Object[]} [{ 상태1: 값, 상태2: 값, ... }] 형식의 배열
+     */
     const singleRowData = [{
-        total: 100,
-        ...chartData.reduce((acc, item) => {
+        total: 100, // 백분율 기준 설정을 위한 베이스 값
+        ...data.reduce((acc, item) => {
             acc[item.status] = item.cnt;
             return acc;
         }, {} as Record<string, number>)
@@ -56,23 +62,23 @@ export default function StatusBarChart({ data }: StatusBarChartProps) {
                     margin={{ top: 0, right: 0, left: 0, bottom: 0 }}
                     barCategoryGap={0}
                 >
+                    {/* 축 설정: X축을 숫자형, Y축을 카테고리형으로 설정 후 숨김 */}
                     <XAxis type="number" hide />
                     <YAxis type="category" hide />
                     
-                    {/* 각 상태별로 Bar 생성 */}
-                    {data.map((item, index) => (
+                    {/* 동적 데이터 바 생성: 각 상태별 세그먼트 렌더링 */}
+                    {data.map((item) => (
                         <Bar 
                             key={item.status}
                             dataKey={item.status}
                             stackId="status"
                             fill={item.color}
-                            // 라운드 코너는 CSS로 처리하는 것이 더 안정적
                         />
                     ))}
                 </BarChart>
             </ResponsiveContainer>
             
-            {/* 범례 */}
+            {/* {/* 하단 범례 영역 */}
             <div style={{ 
                 display: 'flex', 
                 justifyContent: 'center', 
@@ -93,7 +99,7 @@ export default function StatusBarChart({ data }: StatusBarChartProps) {
                 ))}
             </div>
             
-            {/* CSS로 라운드 코너 적용 */}
+            {/* 커스텀 스타일 (양 끝단 라운드 처리) */}
             <style jsx>{`
                 .recharts-bar-rectangle:first-child {
                     border-radius: 10px 0 0 10px;
