@@ -1,5 +1,4 @@
 import React from 'react'
-import { FiMinus } from "react-icons/fi";
 
 export type kpiCard = {
   title: string;
@@ -11,6 +10,12 @@ interface kpiCardProps {
   item: kpiCard;
 }
 
+/**
+ * 성과지표를 확인하는 컴포넌트
+ * 예약 수, 등록된 회원 수, 차량 수, 탈퇴한 회원 수를 확인합니다. 
+ * @param param0 
+ * @returns 
+ */
 export default function KpiCard({item}: kpiCardProps) {
   return (
     <div className='flex flex-col justify-between h-full'>
@@ -26,7 +31,6 @@ export default function KpiCard({item}: kpiCardProps) {
         <p className='text-5xl font-bold text-gray-800'>{ item.value != null ? item.value : '-'}</p>
         <p className='text-sm text-gray-500 mt-2'>{item.title}</p>
       </div>
-        
     </div>
   )
 }
