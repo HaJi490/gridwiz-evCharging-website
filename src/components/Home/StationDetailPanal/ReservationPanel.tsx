@@ -1,42 +1,50 @@
 'use client'
 
-import React, { useRef, useEffect, useState } from 'react'
+import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react'
 import axios from 'axios';
 import { useAtom } from 'jotai';
 import { accessTokenAtom } from '@/store/auth';
 import { addMinutes, format, parse } from 'date-fns';
+import { ko } from 'date-fns/locale';
 
-import Toast from '@/components/Toast/Toast';
-import ConfirmModal from '@/components/ConfirmModal/ConfirmModal';
 import { ChargerInfoItem, TimeInfo } from '@/types/dto';
 import { LuDot } from "react-icons/lu";
-import Calender from '@/components/Calender/Calender';
+import Calender from '@/components/Calender/Calendar';
 import codeToNm from '../../../db/chgerType.json'
 
+/**
+ * ReservationPanel 컴포넌트의 Props 인터페이스
+ */
 interface ReservationPanelProps {
+    /** 예약 대상 충전기 상세 정보 */
     charger: ChargerInfoItem,
+    /** 패널 닫기 콜백 함수 */
     onClose: () => void,
-    // 예약모달
+    /** 예약 확인 모달 오픈 콜백 함수 */
     onOpenConfirm: (msg: string, submsg: string, confirmAction: () => void) => void;
-    onCancel: () => void;   // 예약모달 닫기
-    // 토스트
+    /** 예약 확인 모달 닫기 콜백 함수 */
+    onCancel: () => void;
+    /** 부모 컴포넌트에 토스트 메시지를 설정하는 함수 */
     onSetToastmsg: (msg: string) => void;
 }
 
-type DateFormatTp = 'kor' | 'iso'
-
-export default function ReservationPanel({ 
-    charger, 
-    onClose, 
-    onOpenConfirm, 
-    onCancel, 
+/**
+ * 특정 충전기에 대한 날짜 및 시간별 예약 기능을 제공하는 하단 패널 컴포넌트
+ * 
+ * 주요 기능:
+ * 1. 캘린더를 이용한 예약 날짜 선택
+ * 2. 오전/오후 필터링 및 시간 슬롯 선택
+ * 3. 선택된 시간 슬롯의 연속성 검증 (예: 1시 선택 후 3시 선택 시 차단)
+ * 4. 애니메이션 기반의 패널 노출 및 외부 클릭 시 닫기 제어
+ */
+export default function ReservationPanel({
+    charger,
+    onClose,
+    onOpenConfirm,
+    onCancel,
     onSetToastmsg }: ReservationPanelProps) {
     const [token] = useAtom(accessTokenAtom);
     const reservRef = useRef<HTMLDivElement>(null);
-    // const [toastMsg, setToastMsg] = useState<string>('');
-    // const [confirmMsg, setConfirmMsg] = useState<string>('');
-    // const [confSubMsg, setConfSubMsg] = useState<string>('');
-    // const [showConfirmModal, setShowConfirmModal] = useState<boolean>(false);
 
     const [selectedDate, setSelectedDate] = useState<Date | undefined>();
     const [showDatePicker, setShowDatePicker] = useState<boolean>(true);
@@ -45,16 +53,23 @@ export default function ReservationPanel({
     const [timeFilter, setTimeFilter] = useState<string>('AM');
     const [isClosing, setIsClosing] = useState<boolean>(false);
 
-    // 1. 외부 클릭시 닫기 (모달의 이벤트 전파 차단을 위해 capture 단계에서 처리하지 않음)
+    /** 모달 이벤트 리스너 (Esc 키 닫기 및 스크롤 차단) */
     useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
             if (reservRef.current && !reservRef.current.contains(e.target as Node)) {
                 onClose();
             }
         }
+        const handleEsc = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') onClose();
+        }
 
         document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
+        window.addEventListener('keydown', handleEsc);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+            window.removeEventListener('keydown', handleEsc);
+        }
     }, [onClose])
 
     // 패널 닫기 애니메이션 처리
@@ -66,74 +81,60 @@ export default function ReservationPanel({
         }, 300);
     };
 
-    // 2. 날짜 포맷함수
-    const formatDateString = (date: Date, type: DateFormatTp = 'kor') => {
-        const WEEKDAY = ['일', '월', '화', '수', '목', '금', '토']
-        const year = date.getFullYear();
-        const month = date.getMonth() + 1;
-        const day = date.getDate();
-        const weekday = WEEKDAY[date.getDay()];
+    /**
+     * date-fns 라이브러리를 활용한 날짜 포맷팅 최적화
+     * @param {Date} date 포맷팅할 날짜 객체
+     * @param {'kor' | 'iso'} type 포맷 형식 (한글형/ISO형)
+     */
+    const formatDateString = useCallback((date: Date, type: 'kor' | 'iso' = 'kor') => {
+        if (type === 'kor') return format(date, 'yyyy년 MM월 dd일 (eeee)', { locale: ko });
+        return format(date, 'yyyy-MM-dd');
+    }, []);
 
-        if (type === 'kor') {
-            return `${year}년 ${month}월 ${day}일 (${weekday})`
-        }
-        else if (type === 'iso') {
-            return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-        }
-        return '';
+    /**
+     * 시작 시간 문자열을 기반으로 30분 단위 종료 시간을 계산
+     * @param {string} timeString 'HH:mm' 형식의 시작 시간
+     * @returns {string} 'HH:mm' 형식의 종료 시간
+     */
+    const getEndTime = (timeString: string): string => {
+        const parsedTime = parse(timeString, 'HH:mm', new Date());
+        return format(addMinutes(parsedTime, 29), 'HH:mm');
     }
 
-    // '3:00' 과 같은 시간 문자열을 받아서 '3:29'를 반환하는 함수
-    function getEndTime(timeString: string): string {
-    // 1. 기준 날짜를 임의로 정하고, 시간 문자열을 Date 객체로 파싱합니다.
-    //    'HH:mm'은 '23:59'와 같은 24시간 형식의 시간임을 알려줍니다.
-    const date = new Date(); // 기준 날짜는 아무거나 상관없습니다.
-    const parsedTime = parse(timeString, 'HH:mm', date);
-
-    // 2. 파싱된 시간에 29분을 더합니다.
-    const timeWith29Minutes = addMinutes(parsedTime, 29);
-
-    // 3. 29분이 더해진 Date 객체를 다시 'HH:mm' 형식의 문자열로 변환합니다.
-    return format(timeWith29Minutes, 'HH:mm');
+    /**
+     * 충전기 타입 코드를 가독성 있는 명칭으로 변환
+     */
+    const getChargerTypeName = (chgerCode: string) => {
+        return codeToNm.find(type => chgerCode.includes(type.code))?.type || '';
     }
 
-    // 충전기 타입 변환
-    const typeCodeToNm = (chgerCode: string) => {
-        const match = codeToNm.find(type => chgerCode.includes(type.code));
-        return match?.type || '';
-    }
-
-    // 3. 예약현황 가져오기
+    /**
+     * 선택된 날짜의 예약 가능 시간 슬롯 정보를 서버에서 조회 요청
+     */
     const handleTimeslots = async (date: Date) => {
         setSelectedDate(date);
         setShowDatePicker(false);
-
-        const requestBody = {
-            statId: charger.statId,
-            chgerId: charger.chgerId,
-            date: formatDateString(date, 'iso'),
-        }
+        setSelectedTime([]);
 
         try {
-            const res = await axios.post<TimeInfo[]>(`http://${process.env.NEXT_PUBLIC_BACKIP}:8080/time/timeslots`,
-                requestBody
-            )
+            const res = await axios.post<TimeInfo[]>(`http://${process.env.NEXT_PUBLIC_BACKIP}:8080/time/timeslots`, {
+                statId: charger.statId,
+                chgerId: charger.chgerId,
+                date: formatDateString(date, 'iso'),
+            });
             setGetTimeslots(res.data);
         } catch (error) {
             console.error('handleTimeslots 에러: ', error);
+            onSetToastmsg('예약 현황을 불러오지 못했습니다.');
         }
     }
 
-    // 3-2. 시간대별 필터링
-    const amTimes = getTimeslots?.filter(item => {
-        const hour = parseInt(item.startTime.slice(0, 2));
-        return hour < 12;
-    })
-
-    const pmTimes = getTimeslots?.filter(item => {
-        const hour = parseInt(item.startTime.slice(0, 2));
-        return hour >= 12;
-    })
+    /** 오전/오후 시간대 필터링 */
+    const { amTimes, pmTimes } = useMemo(() => {
+        const am = getTimeslots?.filter(t => parseInt(t.startTime.slice(0, 2)) < 12);
+        const pm = getTimeslots?.filter(t => parseInt(t.startTime.slice(0, 2)) >= 12);
+        return { amTimes: am, pmTimes: pm };
+    }, [getTimeslots])
 
     // 3-3. 시간버튼 렌더링
     const renderTimeButtons = (times: typeof getTimeslots) => {
@@ -143,7 +144,7 @@ export default function ReservationPanel({
             const isDisabled = !item.enabled;
             const slotClasses = `p-2 text-center rounded-md text-sm cursor-pointer transition
                                 ${isDisabled && 'bg-gray-200 text-gray-400 cursor-not-allowed'}
-                                ${isSelected && 'bg-[#cef0d7] text-[#4FA969] font-bold '}
+                                ${isSelected && 'bg-[#cef0d7] text-white font-bold '}
                                 ${!isDisabled && !isSelected && 'bg-gray-100 hover:bg-[#cef0d7]'} `
 
             return (
@@ -159,148 +160,163 @@ export default function ReservationPanel({
         })
     }
 
-    // 4. 연속성 검사
-    const isConsecutive = (arr: number[]) => {
+    /**
+     * 선택된 슬롯 ID들이 중간에 끊김 없이 연속적인지 검증
+     */
+    const checkConsecutive = (arr: number[]) => {
         if (arr.length <= 1) return true;
         const sorted = [...arr].sort((a, b) => a - b);
-        for (let i = 1; i < sorted.length; i++) {
-            if (sorted[i] !== sorted[i - 1] + 1) {
-                return false;
-            }
-        }
-        return true;
+        return sorted.every((val, i) => i === 0 || val === sorted[i - 1] + 1);
     }
 
-    // 4-2. 시간선택 핸들러
-    const handleTimeslotChecked = (value: string, checked: boolean) => {
-        const newSelected = checked
-            ? [...selectedTime, value]
-            : selectedTime.filter((time) => time !== value);
+    /**
+     * 시간 슬롯 선택/해제 핸들러
+     */
+    const handleTimeslotChecked = (timeStr: string, isChecking: boolean) => {
+        const newSelected = isChecking
+            ? [...selectedTime, timeStr].sort()
+            : selectedTime.filter((time) => time !== timeStr);
 
-        const selectedTimeIds = getTimeslots?.filter(slot =>
-            newSelected.includes(slot.startTime.slice(0, 5))
-        ).map(slot => slot.timeId);
+        const selectedTimeIds = getTimeslots
+            ?.filter(slot => newSelected.includes(slot.startTime.slice(0, 5)))
+            .map(slot => slot.timeId) || [];
 
-        if (!isConsecutive(selectedTimeIds || [])) {
+        if (!checkConsecutive(selectedTimeIds)) {
             onSetToastmsg('연속된 시간대만 선택할 수 있습니다.');
             return;
         }
         setSelectedTime(newSelected);
     }
 
-    // 5. 예약 확인
+    /**
+     * 예약 확정 전 유효성 검사 및 확인 모달 호출
+     */
     const handleConfirmReservation = (chger: ChargerInfoItem) => {
-        if (!selectedTime?.length) {
-            onSetToastmsg('시간대를 선택해주세요.');
-            return;
-        }
+        if (!selectedTime?.length) return onSetToastmsg('시간대를 선택해주세요.');
+        if (!token) return onSetToastmsg('로그인이 필요한 서비스입니다.');
+        if (!selectedDate) return;
 
-        if (!token) {    // 아래에 알림으로 띄워주기 --  FIXME
-            onSetToastmsg('로그인이 필요한 서비스입니다.');
-            return;
-        }
-        
-        const lastTime = selectedTime[selectedTime.length-1];
-        const msg = '예약 확정하시겠습니까?';
-        const subMsg = `충전소: ${chger.statNm}\n주소: ${chger.addr} \n 충전기: ${chger.chgerId} \n날짜: ${formatDateString(selectedDate, 'kor')}\n시간: ${selectedTime[0]}~${getEndTime(lastTime)}\n`;
-        onOpenConfirm(msg, subMsg, handleReservation)
+        const subMsg = `
+            충전소: ${chger.statNm}
+            \n주소: ${chger.addr} 
+            \n 충전기: ${chger.chgerId} 
+            \n날짜: ${formatDateString(selectedDate, 'kor')}
+            \n시간: ${selectedTime[0]}~${getEndTime(selectedTime[selectedTime.length - 1])}\n`;
+        onOpenConfirm('예약 확정하시겠습니까?', subMsg, handleReservation)
     }
 
-    // 6. 예약 확정
+    /**
+     * 최종 예약 API 전송
+     */
     const handleReservation = async () => {
-        onCancel()
-        console.log('▶▶▶▶▶▶▶▶▶▶예약확정 콘솔')
-        const selectedTimeIds = getTimeslots?.filter(slot =>
-            selectedTime.includes(slot.startTime.slice(0, 5))
-        ).map(slot => slot.timeId);
+        onCancel();
+        const selectedTimeIds = getTimeslots
+            ?.filter(slot => selectedTime.includes(slot.startTime.slice(0, 5)))
+            .map(slot => slot.timeId);
 
         try {
-            const res = await axios.post(
-                `http://${process.env.NEXT_PUBLIC_BACKIP}:8080/reserve/setSlots`,
+            await axios.post(`http://${process.env.NEXT_PUBLIC_BACKIP}:8080/reserve/setSlots`,
                 { slotIds: selectedTimeIds },
                 { headers: { Authorization: `Bearer ${token}` } }
-            )
-            onSetToastmsg('예약이 완료되었습니다.')
+            );
+            onSetToastmsg('예약이 완료되었습니다.');
+            onClose();
         } catch (error) {
-            console.log('handleReservation 에러: ', error);
-            onSetToastmsg('예약에 실패하였습니다.')
+            console.error('handleReservation 에러: ', error);
+            onSetToastmsg('예약처리 중 오류가 발생했습니다.')
         }
     }
 
     return (
-        <div className='fixed inset-0 bg-black/30 rounded-lg animate-fadeIn'>
-        <div
-            ref={reservRef}
-            className={`w-full pt-4 border-t fixed bottom-0 left-0 right-0 p-5 bg-white z-20 border-[#f2f2f2] rounded-lg  ${
-                    isClosing 
-                        ? 'transform translate-y-full opacity-0' 
+        <div role='none' className='fixed inset-0 bg-black/30 rounded-lg animate-fadeIn'>
+            <section
+                ref={reservRef}
+                role="dialog"
+                aria-modal="true"
+                aria-label="충전기 예약 패널"
+                className={`fixed bottom-0 left-0 right-0 w-full pt-4 border-t p-5 bg-white z-20 border-[#f2f2f2] rounded-lg  
+                    ${isClosing
+                        ? 'transform translate-y-full opacity-0'
                         : 'transform translate-y-0 opacity-100 animate-slideInUp'
-                }`}
-        >
-            {/* <Toast message={toastMsg} setMessage={setToastMsg} /> */}
-            {/* {showConfirmModal &&
-                <ConfirmModal message={confirmMsg} submsg={confSubMsg} onConfirm={() => handleReservation()} onCancel={() => setShowConfirmModal(false)} />
-            } */}
-            <div className='animate-slideInUp'>
-                <p className=' text-gray-900 flex items-center font-medium'>
-                    <span className='text-gray-500 font-normal mr-4 w-15 '>충전기</span>
-                    {charger.chgerId}
-                </p>
-                <p className=' text-gray-900 flex items-center font-medium'>
-                    <span className='text-gray-500 font-normal mr-4 w-15'>타입</span>
-                    {typeCodeToNm(charger.chgerType).split('+').map((part, idx, arr) => (
-                        <React.Fragment key={idx}>
-                            <span>{part}</span>
-                            {idx < arr.length - 1 && (
-                                <span className='text-[#afafaf]'><LuDot /></span>
-                            )}
-                        </React.Fragment>
-                    ))}
-                </p>
-            </div>
-            <div className=' text-gray-900 flex items-center font-medium pb-3 mb-4 cursor-pointer border-b border-[#afafaf] ' onClick={() => setShowDatePicker(true)}>
-                <span className='text-gray-500 font-normal mr-4 w-15'>날짜</span>
-                {selectedDate ? formatDateString(selectedDate, 'kor') : '날짜 선택'}
-            </div>
-            {showDatePicker
-                ? 
-                <div className='w-full flex justify-center '>
-                <Calender selectedDate={selectedDate} onSelectDate={setSelectedDate} handleTimeslots={handleTimeslots} />
-                </div>
-                : (
-                    <>
-                        <div className='mb-3'>
-                            <div className='grid grid-cols-2 gap-2 mb-4'>
+                    }`}
+            >
+                <header className='animate-slideInUp mb-2 space-y-2'>
+                    <h2 className="text-xl font-bold text-gray-800">예약 신청</h2>
+                    <dl>
+                        <div className='flex items-center'>
+                            <dt className='text-gray-500 font-normal mr-4 w-15 '>충전기</dt>
+                            <dd className='text-gray-900 font-medium'>{charger.chgerId}</dd>
+                        </div>
+                        <div className='flex items-center'>
+                            <dt className='text-gray-500 font-normal mr-4 w-15'>타입</dt>
+                            <dd className='text-gray-900 font-medium'>
+                                {getChargerTypeName(charger.chgerType).split('+').map((part, idx, arr) => (
+                                    <React.Fragment key={idx}>
+                                        {part}
+                                        {idx < arr.length - 1 && <LuDot className="text-gray-300" />}
+                                    </React.Fragment>
+                                ))}
+                            </dd>
+                        </div>
+                    </dl>
+                </header>
+
+                {/* 날짜 선택 영역 */}
+                <nav
+                    aria-label='날짜 변경'
+                    onClick={() => setShowDatePicker(true)}
+                    className=' text-gray-900 flex items-center font-medium pb-3 mb-4 cursor-pointer border-b border-[#afafaf]'
+                >
+                    <span className='text-gray-500 font-normal mr-4 w-15'>날짜 선택</span>
+                    <span className="font-bold text-white">
+                        {selectedDate ? formatDateString(selectedDate, 'kor') : '날짜를 선택하세요'}
+                    </span>
+                </nav>
+
+                {showDatePicker
+                    ? <div role='tablist' className='w-full flex justify-center '>
+                        <Calender selectedDate={selectedDate} onSelectDate={setSelectedDate} handleTimeslots={handleTimeslots} />
+                    </div>
+                    : <div className="animate-fade-in">
+                            {/* 오전/오후 탭 필터 (Tab List) */}
+                            <div role='tablist' className='grid grid-cols-2 gap-2 mb-4'>
                                 <button
-                                    className={`cursor-pointer py-2 rounded focus-none 
-                                            ${timeFilter === 'AM' ? 'bg-[#cef0d7] text-[#4FA969] hover:bg-[#d9f3e1] font-bold border-0' : 'hover:bg-[#d9f3e1] bg-gray-100 border-[#afafaf]'}`}
+                                    type="button"
+                                    role="tab"
+                                    aria-selected={timeFilter === 'AM'}
                                     onClick={() => setTimeFilter('AM')}
+                                    className={`cursor-pointer py-2 rounded focus-none 
+                                            ${timeFilter === 'AM' ? 'bg-[#cef0d7] text-white hover:bg-[#d9f3e1] font-bold border-0' : 'hover:bg-[#d9f3e1] bg-gray-100 border-[#afafaf]'}`}
                                 >
                                     오전
                                 </button>
                                 <button
-                                    className={`cursor-pointer py-2 rounded focus-none 
-                                            ${timeFilter === 'PM' ? 'bg-[#cef0d7] text-[#4FA969] hover:bg-[#d9f3e1] font-bold border-0' : 'hover:bg-[#d9f3e1] bg-gray-100 border-[#afafaf]'}`}
                                     onClick={() => setTimeFilter('PM')}
+                                    type="button"
+                                    role="tab"
+                                    aria-selected={timeFilter === 'PM'}
+                                    className={`cursor-pointer py-2 rounded focus-none 
+                                            ${timeFilter === 'PM' ? 'bg-[#cef0d7] text-white hover:bg-[#d9f3e1] font-bold border-0' : 'hover:bg-[#d9f3e1] bg-gray-100 border-[#afafaf]'}`}
                                 >
                                     오후
                                 </button>
                             </div>
+
+                            {/* 시간 슬롯 그리드 */}
                             <div className='grid grid-cols-4 gap-2'>
                                 {timeFilter === 'AM' && renderTimeButtons(amTimes)}
                                 {timeFilter === 'PM' && renderTimeButtons(pmTimes)}
                             </div>
-                        </div>
                         <button
-                            className='w-full py-3 m-2 bg-[#4FA969] text-white rounded cursor-pointer'
-                            onClick={()=>handleConfirmReservation(charger)}
+                            type="button"
+                            className='w-full py-3 m-2 bg-white text-white rounded cursor-pointer'
+                            onClick={() => handleConfirmReservation(charger)}
                         >
                             예약하기
                         </button>
-                    </>
-                )
-            }
-        </div>
+                    </div>
+                }
+            </section>
         </div>
     )
 }
