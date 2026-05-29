@@ -86,9 +86,7 @@ export interface BaseChargingStationDto {
     chargerInfo: Record<string, ChargerInfoItem>; //ChargerInfoMap;
     useTime: string;
 
-    minute: number;
-    predTag: string | null; // 혹은 다른 타입일 수 있습니다.
-    bestChoice: any | null; // 실제 타입에 맞게 수정하세요.
+    bestChoice: string | null; // 실제 타입에 맞게 수정하세요.
     leastDis: number | null;   // 실제 타입에 맞게 수정하세요.
     leashTime: number | null;  // 실제 타입에 맞게 수정하세요.
     canLongUse: any | null; // 실제 타입에 맞게 수정하세요.
