@@ -1,46 +1,45 @@
 'use client'
 
-import React, {useState, useRef, useEffect} from 'react'
+import React, { useState, useRef, useEffect, useCallback } from 'react'
 
-// import FilterModal from '../Filter/FilterModal';
 import StationDetailPanal from '../StationDetailPanal/StationDetailPanal';
 import FilterModal from '@/components/Filter/FilterModal';
 import Toast from '@/components/Toast/Toast';
 import { StationListItem } from '@/types/dto';
-import nmToid from '../../../db/busi_id.json';
+import { Filters } from '@/types/station/station.type';
 import style from './StationListPanel.module.css';
-import { FiFilter } from "react-icons/fi";
-import { TfiFilter } from "react-icons/tfi";
-import { HiOutlineAdjustmentsHorizontal } from "react-icons/hi2";
-import { FiSearch } from "react-icons/fi"; // 더짧고 굵음
+import { FiFilter, FiSearch } from "react-icons/fi";
 
-interface Filters {
-  lat: number;
-  lon: number;
-  radius: number;
-  canUse: boolean;
-  parkingFree: boolean;
-  limitYn: boolean;
-  chargerTypes: string[];
-  chargerComps: string[];
-  outputMin: number;
-  outputMax: number;
-  keyWord?: string;
-}
-
+/**
+ * StationListPanel 컴포넌트 Props 인터페이스
+ */
 interface StationListModalProps {
-  // onClose: () => void;
-  list: StationListItem[] ;
+  /** 검색 결과 충전소 목록 데이터 */
+  list: StationListItem[];
+  /** 현재 적용 중인 필터 데이터 */
   currentFilter: Filters;
+  /** 필터 변경 시 호출되는 콜백 함수 (위경도 제외) */
   onFilterChange: (filters: Omit<Filters, 'lat' | 'lon'>) => void;
+  /** 특정 충전소 선택 시 호출되는 콜백 함수 */
   onStationClick: (station: StationListItem | null) => void;
+  /** 키워드 검색 시 호출되는 콜백 함수 */
   onSearch: (keyword: string) => void;
-  selectedStation : StationListItem | null;
-  selectionSource : 'list' | 'map' | null;
+  /** 현재 선택된 충전소 정보 */
+  selectedStation: StationListItem | null;
+  /** 선택이 발생한 소스 (목록 클릭 또는 지도 마커 클릭) */
+  selectionSource: 'list' | 'map' | null;
 }
 
+/**
+ * 충전소 탐색을 위한 사이드 패널 컴포넌트
+ * 
+ * 주요 기능:
+ * 1. 실시간 키워드 검색 및 통합 필터 모달 연동
+ * 2. 충전소 목록 렌더링 및 상태(급속/완속 수량) 시각화
+ * 3. 지도-목록 간 양방향 인터랙션 (지도 마커 클릭 시 해당 목록 위치로 자동 스크롤)
+ * 4. 선택된 충전소의 상세 정보 패널(StationDetailPanel) 제어
+ */
 export default function StationListPanel({
-  // onClose,
   list,
   currentFilter,
   onFilterChange,
@@ -51,180 +50,144 @@ export default function StationListPanel({
 }: StationListModalProps) {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
-  const closeDetailRef = useRef<HTMLButtonElement | null>(null);
-  const searchRef = useRef<HTMLInputElement | null >(null);
-  const [isSearchOpen, setIsSearchOpen] = useState<boolean>(false);
+  const searchRef = useRef<HTMLInputElement | null>(null);
+  const listRef = useRef<HTMLUListElement>(null);
 
-  const listRef = useRef<HTMLUListElement>(null); // 리스트 스크롤
-
-  // 1. 검색
-  const searchPlaces = () => {
+  /**
+  * 입력된 키워드를 바탕으로 검색을 수행
+  */
+  const handleSearchSubmit = () => {
     const keyword = searchRef.current?.value || '';
     onSearch(keyword);
   }
 
-  // 2. 필터적용
-  const handleApplyFilters = (newFilters:  Omit<Filters , 'lat' | 'lon' >, msg?: string) =>{
-    if(msg){
-      setToastMessage(msg);
-    }
+  /**
+   * 필터 모달에서 적용된 설정을 부모 컴포넌트로 전파
+   * @param {Omit<Filters, 'lat' | 'lon'>} newFilters - 새로 설정된 필터 객체
+   * @param {string} msg - 필터 적용 후 사용자에게 보여줄 안내 메시지
+   */
+  const handleApplyFilters = (newFilters: Omit<Filters, 'lat' | 'lon'>, msg?: string) => {
+    if (msg) setToastMessage(msg);
     setIsFilterOpen(false);
     onFilterChange(newFilters);
   }
 
-  // 필터 열기 핸들러
+  /**
+  * 필터 버튼 클릭 시 상세 패널을 닫고 필터 설정창을 엶
+  */
   const handleOpenFilter = () => {
-    // 상세패널 먼저 닫기
     onStationClick(null);
     setIsFilterOpen(true);
   }
 
-  // 3. 충전소 클릭
-  const handleStationClick = (station: StationListItem) => {
-    // setSelectedStation(station);
-    onStationClick(station);
-  }
 
-  // 3-2. 지도에서 선택됐을때 해당 리스트아이템으로 스크롤
+  /**
+  * 지도 마커 클릭 시 해당 리스트 아이템으로 자동 스크롤되는 로직
+  */
   useEffect(() => {
-    if(selectedStation && selectionSource === 'map' && listRef.current){
-       // 약간의 지연을 두고 스크롤 (DOM 업데이트 대기)
+    if (selectedStation && selectionSource === 'map' && listRef.current) {
+      // DOM 업데이트 대기 후 스크롤 실행
       setTimeout(() => {
-      const selectedElement = listRef.current.querySelector(`[data-station-id="${selectedStation.statId}"]`);
-      if(selectedElement){
-        selectedElement.scrollIntoView({
-          behavior: 'smooth',
-          block: 'center'
-        });
-      } else {
-        console.log('해당 ID의 엘리먼트를 찾을 수 없음:', selectedStation.statId);
-      }
-    }, 100);
-  }
-  },[selectedStation, selectionSource])
-
-  // 4. 상세정보 패널 닫기
-  const handleCloseDetailPanel = () => {
-    onStationClick(null); // 중앙화
-  }
+        const selectedElement = listRef.current.querySelector(`[data-station-id="${selectedStation.statId}"]`);
+        if (selectedElement) {
+          selectedElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 100);
+    }
+  }, [selectedStation, selectionSource])
 
   return (
     <>
-    <Toast message={toastMessage} setMessage={setToastMessage}/>
+      <Toast message={toastMessage} setMessage={setToastMessage} />
       {/* 모달 컨텐츠 */}
-      <header className=' '>
-        {/* 검색 */}
-        <div className='pb-4 border-b border-[#f2f2f2] flex gap-3 items-center '>
-          <div className={`${style.searchInput} flex-1`}>
-            <input
-              type='text'
-              ref={searchRef}
-              placeholder='충전소 검색'
-              className='outline-none'
-              onKeyDown={(e) => e.key === 'Enter' && searchPlaces()}
-            />
-            <button className={`${style.searchBtn}`} onClick={()=>{searchPlaces()}}>
-              <FiSearch size={20} />
-            </button>
-          </div>
-          <button ref={closeDetailRef} onClick={handleOpenFilter}
-                className={`${style.searchBtn} h-8`}>
-              <FiFilter size={20}/>
-          </button>
-          <FilterModal
-            isOpen={isFilterOpen} 
-            onClose={() => setIsFilterOpen(false)}
-            onApplyFilters={handleApplyFilters}
-            initialFilters={currentFilter} 
-          />
-        </div>
-      </header>
-        {/* {isSearchOpen 
-        ?<div className='flex gap-2'>
-          <div className='flex-1 border-[#4FA969] h-10 justify-between'>
-            <input  type="text" placeholder='충전소를 검색하세요'  className="outline-none" />
-            <button className={`${style.searchBtn} h-8`} onClick={()=>{searchPlaces()}}><FiSearch size={20} /></button>
-          </div>
-          <span className={`${style.searchBtn} h-8`}><FiFilter size={20}/></span>
-        </div>
-        :<div className='flex gap-2'>
-          <button className={`${style.searchBtn} h-8`}  onClick={()=>setIsSearchOpen(!isSearchOpen)}><FiSearch size={20} /></button>
-        
-        </div>
-        } */}
-        {/* 충전소 목록 */}
-        <ul className='scrollContent' ref={listRef}>
-          {list.map((item, idx) => {
-
-            return(
-            <li
-              key={`${idx}-${item.statId}`}
-              data-station-id={item.statId} // 스크롤용 데이터 속성추가
-              className={`${style.listSection} 
-                          ${selectedStation?.statId === item.statId ? style.selected : ''} 
-                        `}  // 선택상태 스타일 추가
-              onClick={()=>handleStationClick(item)}
+      <aside aria-label="충전소 탐색 패널" className='w-[440px] h-full flex flex-col p-7 bg-white shadow-md overflow-hidden'>
+        {/* 검색 및 필터 버튼 */}
+        <header className='p-5 border-b border-gray-100 bg-white z-10'>
+          <div className='flex gap-3 items-center'>
+            <div role='search' className={`${style.searchInput} flex-1`}>
+              <input
+                type='text'
+                aria-label='충전소 검색어 입력'
+                ref={searchRef}
+                placeholder='충전소 명칭 검색'
+                className='outline-none'
+                onKeyDown={(e) => e.key === 'Enter' && handleSearchSubmit()}
+              />
+              <button className={`${style.searchBtn}`} onClick={() => { handleSearchSubmit() }}>
+                <FiSearch size={20} />
+              </button>
+            </div>
+            <button
+              type='button'
+              aria-label='검색 실행'
+              onClick={handleOpenFilter}
+              className={`${style.searchBtn} h-8`}
             >
-              
-              <div className='flex gap-1 text-[12px]'>
-                {item.parkingFree 
-                  ?<span className={style.badgetrue}>
-                    무료주차
-                  </span>
-                  :<span className={style.badgefalse}>
-                    유료주차
-                  </span>
-                }
-                {item.limitYn 
-                  ?<span className={style.badgetrue}>
-                    개방
-                  </span>
-                  :<span className={style.badgefalse}>
-                    비개방
-                  </span>
-                }
-              </div>
-              <h2 className=' text-[#232323]'>{item.statNm}</h2>
-              <p className='text-[12px] text-[#666]'>{item.addr}</p>
-              <div className='w-fit bg-[#f2f2f2] px-2 flex gap-1 rounded-md'>
-                {item.totalFastNum > 0 &&
-                  <p className='text-[12px] font-bold'>
-                    <span className='mr-1'>급속</span>
-                    <span className='text-[#4FA969]'>{item.chargeFastNum} </span>
-                    <span className='text-[#b6b6b6]'>/ {item.totalFastNum}</span>
-                  </p>
-                }
-                {item.totalMidNum > 0 &&
-                  <p className='text-[12px] font-bold'>
-                    <span className='mr-1'>중속</span>
-                    <span className='text-[#4FA969]'>{item.chargeMidNum} </span>
-                    <span className='text-[#b6b6b6]'>/ {item.totalMidNum}</span>
-                  </p>
-                }
-                {item.totalSlowNum > 0 &&
-                  <p className='text-[12px] font-bold'>
-                    <span className='mr-1'>완속</span>
-                    <span className='text-[#4FA969]'>{item.chargeSlowNum} </span>
-                    <span className='text-[#b6b6b6]'>/ {item.totalSlowNum}</span>
-                  </p>
-                }
-              </div>
-            </li>
-          )})}
-        </ul>
-        {/* 패널 클릭시 이벤트 전파 차단 */}
-        {/* <div onClick={e => e.stopPropagation()}>   */}
-          {/* 상세정보 패널 */}
-          {selectedStation &&(
-            <StationDetailPanal 
-              selectedStation = {selectedStation}
-              onClose={handleCloseDetailPanel}
-              // closeDetailRef = {closeDetailRef}
-              selectionSource = {selectionSource}
+              <FiFilter size={20} />
+            </button>
+            <FilterModal
+              isOpen={isFilterOpen}
+              onClose={() => setIsFilterOpen(false)}
+              onApplyFilters={handleApplyFilters}
+              initialFilters={currentFilter}
             />
-          )}
-        {/* </div> */}
+          </div>
+        </header>
+
+        {/* 결과 리스트 영역 */}
+        <ul role='list' ref={listRef} className='scrollContent'>
+          {list.length > 0
+            ? list.map((item, idx) => {
+              return (
+                <li
+                  key={`${idx}-${item.statId}`}
+                  data-station-id={item.statId}
+                  role='listitem'
+                  className={`${style.listSection} ${selectedStation?.statId === item.statId ? style.selected : ''}`}
+                  onClick={() => onStationClick(item)}
+                >
+                  <article className='flex flex-col gap-1 w-full'>
+                    <div className='flex gap-1 text-[12px]'>
+                      <span className={item.parkingFree ? style.badgetrue : style.badgefalse}>
+                        {item.parkingFree ? '무료주차' : '유료주차'}
+                      </span>
+                      <span className={item.limitYn ? style.badgetrue : style.badgefalse}>
+                        {item.limitYn ? '개방' : '비개방'}
+                      </span>
+                    </div>
+                    <h2 className=' text-[#232323]'>{item.statNm}</h2>
+                    <p className='text-[12px] text-[#666]'>{item.addr}</p>
+
+                    <div aria-label='충전기 현황' className='w-fit bg-[#f2f2f2] px-2 flex gap-1 rounded-md'>
+                      {[
+                        { label: '급속', total: item.totalFastNum, current: item.chargeFastNum },
+                        { label: '중속', total: item.totalMidNum, current: item.chargeMidNum },
+                        { label: '완속', total: item.totalSlowNum, current: item.chargeSlowNum }
+                      ].map(type => type.total > 0 && (
+                        <div className='text-[12px] font-bold'>
+                          <span className='mr-1'>{type.label}</span>
+                          <span className='text-[#4FA969]'>{type.current} </span>
+                          <span className='text-[#b6b6b6]'>/ {type.total}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </article>
+                </li>
+              )
+            })
+            : <li className="py-20 text-center text-gray-400 text-sm">검색 결과가 없습니다.</li>
+          }
+        </ul>
+
+        {/* 선택된 충전소 상세 정보 레이어 */}
+        {selectedStation && (
+          <StationDetailPanal
+            selectedStation={selectedStation}
+            onClose={() => onStationClick(null)}
+            selectionSource={selectionSource}
+          />
+        )}
+      </aside>
     </>
-      
   )
 }
